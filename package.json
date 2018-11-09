@@ -6,12 +6,12 @@
     "jupyter",
     "jupyterlab",
     "jupyterlab extension",
-    "glueviz"
+    "glueviz",
     "widgets"
   ],
-  "homepage": "https://github.com/jupyter-widgets/jupyterlab-floatview",
+  "homepage": "https://github.com/denphi/jupyterlab-floatview",
   "bugs": {
-    "url": "https://github.com/jupyter-widgets/jupyterlab-floatview/issues"
+    "url": "https://github.com/denphi/jupyterlab-floatview/issues"
   },
   "license": "BSD-3-Clause",
   "author": "Project Jupyter",
@@ -19,7 +19,7 @@
   "types": "./lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jupyter-widgets/jupyterlab-floatview"
+    "url": "https://github.com/denphi/jupyterlab-floatview"
   },
   "scripts": {
     "build": "npm run build:lib",
@@ -40,7 +40,9 @@
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.2.1",
-    "@jupyter-widgets/jupyterlab-manager": "^0.37.2"
+    "@jupyter-widgets/jupyterlab-manager": "^0.37.2",
+    "@jupyterlab/plotly-extension": "^0.18.0"
+    "plotlywidget": "^0.5.1"
   },
   "devDependencies": {
     "@phosphor/application": "^1.6.0",

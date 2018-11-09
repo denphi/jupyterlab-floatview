@@ -89,7 +89,7 @@ class GlueScatterPlotly (GluePlotly):
         #self.parent.printInDebug(ids)        
         self.plotly_fig.data[0].update(
             selectedpoints=ids,
-            selected={'marker':{'color':'#rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
+            selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
 
@@ -111,7 +111,7 @@ class GlueScatter3DPlotly (GluePlotly):
         trace = {
             'type': "scatter3d", 'mode': "markers", 'name': self.data.label,
             'marker': dict({
-                'symbol':'circle', 'size': self.default_size_marker, 'color': 'rgba(0, 0, 0)', 'opacity':0.8,
+                'symbol':'circle', 'size': self.default_size_marker, 'color': 'rgba(0,0,0,0.8)',
             }),
             'x': self.data[x_id],
             'y': self.data[y_id],
@@ -165,13 +165,15 @@ class GlueContourPlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
     ncontours = 1
-    nbins = 30
+    nbins = 40
     def __init__(self, data, dimensions, title, mode, debug=None):
         GluePlotly.__init__(self, data, dimensions, title, mode, debug)
         self.updateRender()
         
     def createFigureWidget(self, x_id, y_id):
         heatmap, xedges, yedges = np.histogram2d(self.data[x_id], self.data[y_id], bins=self.nbins)
+        mod_heatmap = np.zeros((self.nbins+2,self.nbins+2))
+        mod_heatmap[1:-1,1:-1] = heatmap.T
         #d_val = self.data[x_id]
         #if hasattr(self.data[x_id], 'codes'):
         #    d_val = self.data[x_id].codes
@@ -182,11 +184,11 @@ class GlueContourPlotly (GluePlotly):
             'colorscale':[[0, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],'showlegend':False,
             'autocontour':False,'ncontours':self.ncontours,
             'contours':{'coloring':'heatmap'},
-            'x0': xedges[0],
+            'x0': xedges[0]-(xedges[1]-xedges[0])/2,
             'dx': xedges[1]-xedges[0],
-            'y0': yedges[0],
+            'y0': yedges[0]-(yedges[1]-yedges[0])/2,
             'dy': yedges[1]-yedges[0],
-            'z':heatmap.T
+            'z':mod_heatmap
         }
         traces.append(trace)
         trace = {
@@ -227,7 +229,7 @@ class GlueContourPlotly (GluePlotly):
         
     def updateRender(self):
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], self.dimensions[1])     
-        self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)            
+        self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
         GluePlotly.display(self)
 
     def updateSelection(self, ids):
