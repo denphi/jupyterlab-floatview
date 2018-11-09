@@ -1,11 +1,12 @@
 {
   "name": "@jupyter-widgets/jupyterlab-floatview",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "description": "A floatview output widget for JupyterLab",
   "keywords": [
     "jupyter",
     "jupyterlab",
     "jupyterlab extension",
+    "glueviz"
     "widgets"
   ],
   "homepage": "https://github.com/jupyter-widgets/jupyterlab-floatview",

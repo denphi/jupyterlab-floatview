@@ -55,12 +55,12 @@ cmdclass['jsdeps'] = combine_commands(
 
 setup_args = dict(
     name            = name,
-    description     = 'A floatview output widget for JupyterLab',
+    description     = 'A floatview output widget for JupyterLab + GlueViz Visualization with plotly',
     version         = version,
     scripts         = glob(pjoin('scripts', '*')),
     cmdclass        = cmdclass,
     packages        = find_packages(),
-    author          = 'Project Jupyter',
+    author          = 'Project Jupyter contributor',
     author_email    = 'ipython-dev@scipy.org',
     url             = '',
     license         = 'BSD',
@@ -80,6 +80,8 @@ setup_args = dict(
     include_package_data = True,
     install_requires = [
         'ipywidgets>=7.0.0',
+        'plotly>=3.4.0',
+        'glueviz>=0.13.0',
     ],
     extras_require = {
         'test': [

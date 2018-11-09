@@ -45,4 +45,4 @@ data = read_csv('your_data.csv', index_col=False, usecols=cols)
 gmw = GlueManagerWidget(subtab, modal=True, label="Data")
 ```
 
-!floatview.png
+![floatview](floatview.png)
