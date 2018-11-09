@@ -41,7 +41,7 @@
   "dependencies": {
     "@jupyter-widgets/base": "^1.2.1",
     "@jupyter-widgets/jupyterlab-manager": "^0.37.2",
-    "@jupyterlab/plotly-extension": "^0.18.0"
+    "@jupyterlab/plotly-extension": "^0.18.0",
     "plotlywidget": "^0.5.1"
   },
   "devDependencies": {
