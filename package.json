@@ -1,5 +1,5 @@
 {
-  "name": "@jupyter-widgets/jupyterlab-floatview",
+  "name": "jupyterlab-floatview",
   "version": "0.1.0",
   "description": "A floatview output widget for JupyterLab",
   "keywords": [

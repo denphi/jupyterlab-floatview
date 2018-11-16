@@ -6,7 +6,7 @@ Developer install
 To install a developer version of floatview, you will first need to clone
 the repository::
 
-    git clone https://github.com/jupyter-widgets/jupyterlab-floatview
+    git clone https://github.com/denphi/jupyterlab-floatview
     cd floatview
 
 Next, install it with a develop install using pip::
