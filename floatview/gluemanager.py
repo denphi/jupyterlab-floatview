@@ -1,6 +1,6 @@
 from ipywidgets import widgets
 from .floatview import Floatview
-from .glueplotly import GlueScatterPlotly, GlueScatter3DPlotly, GlueContourPlotly, GlueTablePlotly, GlueHistogramPlotly, GlueParallelCoordinatesPlotly, GlueErrorBarPlotly, GluePolyFitPlotly
+from .glueplotly import GlueScatterPlotly, GlueScatter3DPlotly, GlueContourPlotly, GlueTablePlotly, GlueHistogramPlotly, GlueParallelCoordinatesPlotly, GlueErrorBarPlotly, GluePolyFitPlotly, GlueLinePlotly
 from glue import core as gcore
 
 import itertools
@@ -60,30 +60,6 @@ class GlueManager:
                 self.tables.append(gp);
                 gp.setParent(self)
                 
-        if (type == "composed_errorbar"):
-            mode = "tab-after"
-            if (len(self.scatter) == 0):
-                mode = "split-bottom"                    
-            gp = GlueErrorBarPlotly(self.data, components, title, mode, self.debug, only_subsets)
-            self.tables.append(gp);
-            gp.setParent(self)
-                
-        elif (type == "composed_scatter"):
-            mode = "tab-after"            
-            if (len(self.tables) == 0):
-                mode = "split-right"               
-            gp = GlueScatterPlotly(self.data, components, title, mode, self.debug, only_subsets)                
-            self.tables.append(gp);
-            gp.setParent(self)
-            
-        elif (type == "composed_errorbar"):
-            mode = "tab-after"            
-            if (len(self.tables) == 0):
-                mode = "split-right"               
-            gp = GlueScatterPlotly(self.data, components, title, mode, self.debug, only_subsets)                
-            self.tables.append(gp);
-            gp.setParent(self)            
-            
         elif (type == "composed_polyfit_2d" or type == "composed_polyfit_3d"):
             mode = "tab-after"                        
             degree = 2
@@ -151,9 +127,46 @@ class GlueManager:
                 gp = GlueHistogramPlotly(self.data, [dimension], title, mode, self.debug, only_subsets)
                 self.tables.append(gp);
                 gp.setParent(self)
+				
+				
+        elif (type == "composed_errorbar"):
+            mode = "tab-after"
+            if (len(self.scatter) == 0):
+                mode = "split-bottom"                    
+            gp = GlueErrorBarPlotly(self.data, components, title, mode, self.debug, only_subsets)
+            self.tables.append(gp);
+            gp.setParent(self)
+                
+        elif (type == "composed_scatter"):
+            mode = "tab-after"            
+            if (len(self.tables) == 0):
+                mode = "split-right"               
+            gp = GlueScatterPlotly(self.data, components, title, mode, self.debug, only_subsets)                
+            self.tables.append(gp);
+            gp.setParent(self)
+            
+        elif (type == "composed_errorbar"):
+            mode = "tab-after"            
+            if (len(self.tables) == 0):
+                mode = "split-right"               
+            gp = GlueScatterPlotly(self.data, components, title, mode, self.debug, only_subsets)                
+            self.tables.append(gp);
+            gp.setParent(self)            
+            
+				
+        elif (type == "composed_lines"):
+            mode = "tab-after"
+            if (len(self.scatter) == 0):
+                mode = "split-bottom"                    
+            gp = GlueLinePlotly(self.data, components, title, mode, self.debug, only_subsets)
+            self.tables.append(gp);
+            gp.setParent(self)
+
+        return gp
+
     
     def listPlots(self):    
-        return ["scatter","composed_scatter","errorbar","composed_errorbar","scatter3D","contour","table","parallels", "histogram", "composed_polyfit_2d", "composed_polyfit_3d"]
+        return ["scatter","composed_scatter","errorbar","composed_errorbar","composed_lines","scatter3D","contour","table","parallels", "histogram", "composed_polyfit_2d", "composed_polyfit_3d"]
             
 
     def printInDebug(self, var):

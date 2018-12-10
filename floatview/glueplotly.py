@@ -47,6 +47,7 @@ class GluePlotly():
 class GlueScatterPlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
+	
     def __init__(self, data, dimensions, title, mode, debug=None, only_subsets=False):
         GluePlotly.__init__(self, data, dimensions, title, mode, debug, only_subsets)
         self.updateRender()
@@ -80,7 +81,7 @@ class GlueScatterPlotly (GluePlotly):
                     'type': "scattergl", 'mode': "markers", 'name': sset.label + "_" + y_id,
                     'marker': dict({
                         'symbol':'circle', 'size': self.focused_size_marker, 'color': color,
-                        'line' : { 'width' : 1, 'color' : color}      
+                        'line' : { 'width' : 2, 'color' : color}      
                     }),
                     'selected':{'marker':{'color':color, 'size': self.focused_size_marker}},
                     'unselected':{'marker':{'color':color, 'size': self.focused_size_marker}},                
@@ -102,6 +103,9 @@ class GlueScatterPlotly (GluePlotly):
                 'layout': layout
         })
         
+    def changeAxisScale(self, axis="yaxis",type="linear"):
+        self.plotly_fig.layout[axis].type = type
+
     def updateRender(self):
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], [self.dimensions[i] for i in range(1,len(self.dimensions))])
         if len(self.dimensions) == 2:
@@ -115,6 +119,88 @@ class GlueScatterPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
+
+    def setSubset(self,trace,points,selector): 
+        from .gluemanager import GlueManager
+        if isinstance(self.parent, GlueManager):
+            self.parent.updateSelection(points.point_inds)
+            
+class GlueLinePlotly (GluePlotly):
+    default_size_marker = 3
+    focused_size_marker = 4
+    x_scale_type = 'linear'
+    y_scale_type = 'linear'
+    marker_type = 'lines'
+
+    def __init__(self, data, dimensions, title, mode, debug=None, only_subsets=False):
+        GluePlotly.__init__(self, data, dimensions, title, mode, debug, only_subsets)
+        self.updateRender()
+        
+    def createFigureWidget(self, x_id, y_id_list):
+        traces = []
+        alpha_min, alpha_max, alpha_delta = self.getDeltaFunction(len(y_id_list))
+        alpha_val = alpha_max        
+        for y_id in y_id_list:
+            color = "#444444"
+            color = 'rgba'+str(colors.to_rgba(color, alpha=alpha_val))
+            trace = {
+                'type': "scattergl", 'mode': self.marker_type, 'name': self.data.label + "_" + y_id,
+                'line' : { 'width' : 1, 'color' : color },
+                'x': self.data[x_id],
+                'y': self.data[y_id],
+            }
+            if self.only_subsets == False:
+                traces.append(trace)
+            alpha_val = alpha_val - alpha_delta
+            
+        for sset in self.data.subsets:
+            alpha_val = alpha_max        
+            for y_id in y_id_list:
+                color = sset.style.color
+                color = 'rgba'+str(colors.to_rgba(color, alpha=alpha_val))                
+                trace = {
+                    'type': "scattergl", 'mode': self.marker_type, 'name': sset.label + "_" + y_id,
+                    'line' : { 'width' : 1, 'color' : color},
+                    'x': sset[x_id],
+                    'y': sset[y_id],
+                }
+                traces.append(trace)  
+                alpha_val = alpha_val - alpha_delta
+                
+
+        layout = {
+            'margin' : {'l':50,'r':0,'b':50,'t':30 },            
+            'xaxis': { 'autorange' : True, 'zeroline': True, 'title' : x_id, 'type' : self.x_scale_type },
+            'yaxis': { 'autorange':True, 'zeroline': True, 'title' : ' '.join(y_id_list), 'type' : self.y_scale_type },
+            'showlegend': True,
+        }
+        return FigureWidget({
+                'data': traces,
+                'layout': layout
+        })
+        
+    def updateRender(self):
+        self.plotly_fig = self.createFigureWidget(self.dimensions[0], [self.dimensions[i] for i in range(1,len(self.dimensions))])
+        if len(self.dimensions) == 2:
+            self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        GluePlotly.display(self)
+
+    def changeAxisScale(self, axis="yaxis",type="linear"):
+        self.plotly_fig.layout[axis].type = type
+        
+    def changeMarker(self, type="lines"):
+        if (type == "lines+markers"):
+            self.marker_type = type
+            self.updateRender()
+        elif (type == "lines"):
+            self.marker_type = type
+            self.updateRender()
+        elif (type == "lines+text"):
+            self.marker_type = type
+            self.updateRender()
+        
+    def updateSelection(self, ids):
+        pass #self.parent.printInDebug(ids)        
 
     def setSubset(self,trace,points,selector): 
         from .gluemanager import GlueManager
@@ -158,7 +244,7 @@ class GluePolyFitPlotly (GluePlotly):
                 'line' : { 'width' : 1, 'color' : color }, 
                 'x': self.data[x_id],
                 'y': y_new,
-				'showlegend':False
+                'showlegend':False
             }
             if self.only_subsets == False:
                 traces.append(trace)
@@ -193,7 +279,7 @@ class GluePolyFitPlotly (GluePlotly):
                     'line' : { 'width' : 1, 'color' : color }, 
                     'x': sset[x_id],
                     'y': y_new,
-					'showlegend':False
+                    'showlegend':False
                 }
                 traces.append(trace)                
                 alpha_val = alpha_val - alpha_delta
@@ -223,6 +309,10 @@ class GluePolyFitPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
+		
+    def changeAxisScale(self, axis="yaxis",type="linear"):
+        self.plotly_fig.layout[axis].type = type
+
 
     def setSubset(self,trace,points,selector): 
         from .gluemanager import GlueManager
@@ -293,7 +383,7 @@ class GlueErrorBarPlotly (GluePlotly):
                 'mode':'lines',
                 'showlegend':False
             }
-            if self.only_subsets == False:			
+            if self.only_subsets == False:            
                 traces.append(trace)
             
             trace = {
@@ -306,7 +396,7 @@ class GlueErrorBarPlotly (GluePlotly):
                 'y': y_mean,
                 'mode':'lines',
             }
-            if self.only_subsets == False:	
+            if self.only_subsets == False:    
                 traces.append(trace)
             
             trace = {
@@ -523,7 +613,7 @@ class GlueContourPlotly (GluePlotly):
             'x': self.data[x_id],
             'y': self.data[y_id],
         }
-        if self.only_subsets == False:	
+        if self.only_subsets == False:    
             traces.append(trace)
         for sset in self.data.subsets:
             color = sset.style.color
@@ -562,6 +652,10 @@ class GlueContourPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
+		
+    def changeAxisScale(self, axis="yaxis",type="linear"):
+        self.plotly_fig.layout[axis].type = type
+
 
     def setSubset(self,trace,points,selector): 
         from .gluemanager import GlueManager
@@ -590,7 +684,7 @@ class GlueHistogramPlotly (GluePlotly):
             'x': xedges,
             'y': hist,
         }
-        if self.only_subsets == False:		
+        if self.only_subsets == False:        
             traces.append(trace)
         for sset in self.data.subsets:
             s_val = sset[x_id]
