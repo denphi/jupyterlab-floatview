@@ -104,9 +104,9 @@ class GlueScatterPlotly (GluePlotly):
         })
         
     def changeAxisScale(self, axis="yaxis",type="linear"):
-        if (axis = 'xaxis')
+        if (axis ==  'xaxis'):
             self.x_scale_type = type
-        if (axis = 'yaxis')
+        if (axis ==  'yaxis'):
             self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
 
@@ -190,9 +190,9 @@ class GlueLinePlotly (GluePlotly):
         GluePlotly.display(self)
 
     def changeAxisScale(self, axis="yaxis",type="linear"):
-        if (axis = 'xaxis')
+        if (axis ==  'xaxis'):
             self.x_scale_type = type
-        if (axis = 'yaxis')
+        if (axis ==  'yaxis'):
             self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
         
@@ -319,9 +319,9 @@ class GluePolyFitPlotly (GluePlotly):
         )
         
     def changeAxisScale(self, axis="yaxis",type="linear"):
-        if (axis = 'xaxis')
+        if (axis ==  'xaxis'):
             self.x_scale_type = type
-        if (axis = 'yaxis')
+        if (axis ==  'yaxis'):
             self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
 
@@ -666,9 +666,9 @@ class GlueContourPlotly (GluePlotly):
         )
         
     def changeAxisScale(self, axis="yaxis",type="linear"):
-        if (axis = 'xaxis')
+        if (axis ==  'xaxis'):
             self.x_scale_type = type
-        if (axis = 'yaxis')
+        if (axis ==  'yaxis'):
             self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
 
