@@ -29,7 +29,7 @@ import {
 
 import '../css/floatview.css';
 
-const EXTENSION_ID = 'jupyterlab-floatview';
+const EXTENSION_ID = '@jupyter-widgets/jupyterlab-floatview';
 
 const floatviewPlugin: JupyterLabPlugin<void> = {
   id: EXTENSION_ID,
@@ -77,7 +77,7 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
     }
 
     registry.registerWidget({
-      name: 'jupyterlab-floatview',
+      name: '@jupyter-widgets/jupyterlab-floatview',
       version: EXTENSION_SPEC_VERSION,
       exports: {
         FloatviewModel: FloatviewModel,

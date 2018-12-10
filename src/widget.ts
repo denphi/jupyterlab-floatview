@@ -39,9 +39,9 @@ class FloatviewModel extends OutputModel {
     }
 
   static model_name = 'FloatviewModel';
-  static model_module = 'jupyterlab-floatview';
+  static model_module = '@jupyter-widgets/jupyterlab-floatview';
   static model_module_version = EXTENSION_SPEC_VERSION;
   static view_name = 'FloatviewView';  // Set to null if no view
-  static view_module = 'jupyterlab-floatview';   // Set to null if no view
+  static view_module = '@jupyter-widgets/jupyterlab-floatview';   // Set to null if no view
   static view_module_version = EXTENSION_SPEC_VERSION;
 }
