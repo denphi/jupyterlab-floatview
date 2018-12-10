@@ -35,19 +35,19 @@ class GluePlotly():
 
     def updateRender():
         pass
-		
+        
     def getDeltaFunction(self, size, alpha_min=0.3, alpha_max=0.8):
         if size > 1 :
             alpha_delta = (alpha_max-alpha_min)/(size-1)
         else :
             alpha_delta = (alpha_max-alpha_min)
         return alpha_min, alpha_max, alpha_delta
-	
+    
         
 class GlueScatterPlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
-	
+    
     def __init__(self, data, dimensions, title, mode, debug=None, only_subsets=False):
         GluePlotly.__init__(self, data, dimensions, title, mode, debug, only_subsets)
         self.updateRender()
@@ -104,6 +104,10 @@ class GlueScatterPlotly (GluePlotly):
         })
         
     def changeAxisScale(self, axis="yaxis",type="linear"):
+        if (axis = 'xaxis')
+            self.x_scale_type = type
+        if (axis = 'yaxis')
+            self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
 
     def updateRender(self):
@@ -186,6 +190,10 @@ class GlueLinePlotly (GluePlotly):
         GluePlotly.display(self)
 
     def changeAxisScale(self, axis="yaxis",type="linear"):
+        if (axis = 'xaxis')
+            self.x_scale_type = type
+        if (axis = 'yaxis')
+            self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
         
     def changeMarker(self, type="lines"):
@@ -309,8 +317,12 @@ class GluePolyFitPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
-		
+        
     def changeAxisScale(self, axis="yaxis",type="linear"):
+        if (axis = 'xaxis')
+            self.x_scale_type = type
+        if (axis = 'yaxis')
+            self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
 
 
@@ -652,10 +664,13 @@ class GlueContourPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
-		
+        
     def changeAxisScale(self, axis="yaxis",type="linear"):
+        if (axis = 'xaxis')
+            self.x_scale_type = type
+        if (axis = 'yaxis')
+            self.y_scale_type = type
         self.plotly_fig.layout[axis].type = type
-
 
     def setSubset(self,trace,points,selector): 
         from .gluemanager import GlueManager
