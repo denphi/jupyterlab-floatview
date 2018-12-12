@@ -5,7 +5,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 from .floatview import Floatview
-from .glueplotly import GluePlotly
 from .gluemanager import GlueManager
 from .gluemanager import GlueManagerWidget
 
