@@ -1,25 +1,73 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
+from plotly import tools
 import plotly.graph_objs as go
+import numpy as np
+from copy import deepcopy
 
 class GlueTablePlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)   
-        values = [self.data[col].tolist() for col in self.dimensions]   
-        layout = {
-            'margin' : {'l':10,'r':10,'b':0,'t':10 },     
-        }        
-        self.plotly_fig = go.FigureWidget([go.Table(
-            header=dict(values=dimensions,
-                        fill = dict(color='#C2D4FF'),
-                        align = ['left'] * 5),
-            cells=dict(values=values,
-                       fill = dict(color='#F5F8FF'),
-                       align = ['left'] * 5))], layout=layout)
+        self.updateRender()
+
+    def updateRender(self):		
+        self.plotly_fig = self.createFigureWidget()
         GluePlotly.display(self)
+        
+    def createFigureWidget(self):        
+        traces = []        
+        dimensions = deepcopy(self.dimensions)
+        values = [self.data[col].tolist() for col in dimensions]  
+        header_colors = ["#444444" for col in dimensions]
+        coll_fils = ["#F5F5F5" for col in dimensions]
+        columnwidth = [80 for col in dimensions]
+        for sset in self.data.subsets:
+            dimensions.append("") #sset.label)
+            color = sset.style.color            
+            header_colors.append(color)
+            m = sset.to_mask()
+            v = np.array(["#F5F5F5"]*len(m))
+            v2 = np.array([""]*len(m))
+            v[m] = color
+            values.append(v2)
+            coll_fils.append(v)
+            columnwidth.append(18)
+
+        trace = {
+            'type' : "table",
+            'columnwidth' : columnwidth,
+            'header' : {
+                'values':dimensions,
+                'fill' : {'color':header_colors},
+                'align' : ['left', 'center'],
+                'font' : { 'color' : 'white' },
+            },
+            'cells' : { 
+                'values' : values,
+                'fill' : { 'color' : coll_fils },
+                'align' : ['left']
+            }
+        }
+        
+        traces.append(trace)
+        layout = {
+            'margin' : {'l':10,'r':10,'b':0,'t':10 },
+        }                    
+        return go.FigureWidget(traces, layout=layout)
 
     def updateSelection(self, ids):
-        dimensions = self.plotly_fig.data[0].header.values
+        dimensions = self.dimensions
         values = [self.data[col][ids].tolist() for col in dimensions]
+        coll_fils = ["#F5F5F5" for col in dimensions]        
+        for sset in self.data.subsets:
+            m = sset.to_mask()    
+            color = sset.style.color            
+            v2 = np.array([""]*len(ids))
+            values.append(v2)
+            v = np.array(["#F5F5F5"]*len(m))            
+            v[m] = color
+            coll_fils.append(v[ids])            
         self.plotly_fig.data[0].cells.values = values
+        self.plotly_fig.data[0].cells.fill.color = coll_fils
+
         

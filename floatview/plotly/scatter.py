@@ -87,7 +87,7 @@ class GlueScatterPlotly (GluePlotly):
 
     def updateRender(self):		
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], [self.dimensions[i] for i in range(1,len(self.dimensions))])
-        if len(self.dimensions) == 2:
+        if self.only_subsets == False:
             self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
         GluePlotly.display(self)
 
@@ -100,6 +100,5 @@ class GlueScatterPlotly (GluePlotly):
         )
 
     def setSubset(self,trace,points,selector): 
-        from .gluemanager import GlueManager
-        if isinstance(self.parent, GlueManager):
+        if(self.parent is not None):
             self.parent.updateSelection(points.point_inds)

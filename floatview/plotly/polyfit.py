@@ -22,7 +22,11 @@ class GluePolyFitPlotly (GluePlotly):
         alpha_val = alpha_max
         polyfun = {}
         for i, y_id in enumerate(y_id_list):
-            z = np.polyfit(self.data[x_id], self.data[y_id], self.options['fit_degree'].value)
+            with self.debug:
+                print(self.data[x_id])
+                print(self.data[y_id])
+                print(self.options['fit_degree'].value)
+            z = np.polyfit(self.data[x_id].astype('float'), self.data[y_id].astype('float'), self.options['fit_degree'].value)
             polyfun[y_id] = np.poly1d(z)
             color = "#444444"
             color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
@@ -37,11 +41,13 @@ class GluePolyFitPlotly (GluePlotly):
             }
             if self.only_subsets == False:
                 traces.append(trace)
-            y_new = polyfun[y_id](self.data[x_id])
+            x_new=self.data[x_id].astype('float').tolist()
+            x_new.sort()
+            y_new = polyfun[y_id](x_new)
             trace = {
                 'type': "scattergl", 'mode': "lines", 'name': self.data.label + "_fit_" + y_id,
                 'line' : { 'width' : self.options['line_width'].value, 'color' : color }, 
-                'x': self.data[x_id],
+                'x': x_new,
                 'y': y_new,
                 'showlegend':False
             }
@@ -53,7 +59,7 @@ class GluePolyFitPlotly (GluePlotly):
         for sset in self.data.subsets:
             alpha_val = alpha_max        
             for i, y_id in enumerate(y_id_list):
-                z = np.polyfit(sset[x_id], sset[y_id], self.options['fit_degree'].value)
+                z = np.polyfit(sset[x_id].astype('float'), sset[y_id].astype('float'), self.options['fit_degree'].value)
                 f = np.poly1d(z)
                 color = sset.style.color
                 color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
@@ -72,11 +78,14 @@ class GluePolyFitPlotly (GluePlotly):
 
                 }
                 traces.append(trace)  
-                y_new = f(sset[x_id])
+                
+                x_new=sset[x_id].astype('float').tolist()
+                x_new.sort()
+                y_new = polyfun[y_id](x_new)
                 trace = {
                     'type': "scattergl", 'mode': "lines", 'name': sset.label + "_fit_" + y_id,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color }, 
-                    'x': sset[x_id],
+                    'x': x_new,
                     'y': y_new,
                     'showlegend':False
                 }
@@ -102,7 +111,7 @@ class GluePolyFitPlotly (GluePlotly):
         
     def updateRender(self):
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], [self.dimensions[i] for i in range(1,len(self.dimensions))])
-        if len(self.dimensions) == 2:
+        if self.only_subsets == False:
             self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
         GluePlotly.display(self)
 
@@ -123,7 +132,6 @@ class GluePolyFitPlotly (GluePlotly):
 
 
     def setSubset(self,trace,points,selector): 
-        from .gluemanager import GlueManager
-        if isinstance(self.parent, GlueManager):
-            self.parent.updateSelection(points.point_inds)            
+        if(self.parent is not None):
+            self.parent.updateSelection(points.point_inds)           
             

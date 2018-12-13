@@ -20,6 +20,8 @@ class GlueContourPlotly (GluePlotly):
         self.updateRender()
         
     def createFigureWidget(self, x_id, y_id):
+        with self.debug:
+            print (self.data[x_id], self.data[y_id])
         heatmap, xedges, yedges = np.histogram2d(self.data[x_id].astype('float'), self.data[y_id].astype('float'), bins=self.options['nbins'].value)
         mod_heatmap = np.zeros(( self.options['nbins'].value+2, self.options['nbins'].value+2))
         mod_heatmap[1:-1,1:-1] = heatmap.T
@@ -86,8 +88,9 @@ class GlueContourPlotly (GluePlotly):
         })
         
     def updateRender(self):
-        self.plotly_fig = self.createFigureWidget(self.dimensions[0], self.dimensions[1])     
-        self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        self.plotly_fig = self.createFigureWidget(self.dimensions[0], self.dimensions[1])    
+        if self.only_subsets == False:
+            self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
         GluePlotly.display(self)
 
     def updateSelection(self, ids):
@@ -105,6 +108,5 @@ class GlueContourPlotly (GluePlotly):
         self.plotly_fig.layout[axis].type = type
 
     def setSubset(self,trace,points,selector): 
-        from .gluemanager import GlueManager
-        if isinstance(self.parent, GlueManager):
+        if(self.parent is not None):
             self.parent.updateSelection(points.point_inds)

@@ -71,9 +71,8 @@ class GlueParallelCoordinatesPlotly (GluePlotly):
         )
 
     #def setSubset(self,trace,points,selector): 
-    #   from .gluemanager import GlueManager
-    #   if isinstance(self.parent, GlueManager):
-    #        self.parent.updateSelection(points.point_inds)   
+    #    if(self.parent is not None):
+    #        self.parent.updateSelection(points.point_inds)
             
         
         

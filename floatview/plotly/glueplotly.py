@@ -102,7 +102,7 @@ class GluePlotly():
     def setParent(self, parent): 
         self.parent = parent
 
-    def updateRender():
+    def updateRender(self):
         pass
         
     def getDeltaFunction(self, size, alpha_min=0.5, alpha_max=0.8):

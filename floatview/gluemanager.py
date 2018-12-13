@@ -373,11 +373,13 @@ class GlueManagerWidget(widgets.Tab):
         return widgets.Tab._repr_html_(self)
 
     def createNewView(self,e,dd, tb, tx, ss):
+        with self.debug:
+            print("asdasd")
         list_comp = []
         for vv in tb:
             if vv.value == True:
                 list_comp.append(vv.description)                        
-        self.gluemanager.newView(dd.value, list_comp, tx.value, ss.value)
+        self.gluemanager.newView(dd.value, list_comp, tx.value, only_subsets=ss.value)
             
     def createSubsetFromSelection(self, tx):        
         self.gluemanager.createSubsetFromSelection(tx.value)
