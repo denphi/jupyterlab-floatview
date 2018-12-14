@@ -20,14 +20,12 @@ class GlueContourPlotly (GluePlotly):
         self.updateRender()
         
     def createFigureWidget(self, x_id, y_id):
-        with self.debug:
-            print (self.data[x_id], self.data[y_id])
-        heatmap, xedges, yedges = np.histogram2d(self.data[x_id].astype('float'), self.data[y_id].astype('float'), bins=self.options['nbins'].value)
+        heatmap, xedges, yedges = np.histogram2d(self.data[x_id].flatten().astype('float'), self.data[y_id].flatten().astype('float'), bins=self.options['nbins'].value)
         mod_heatmap = np.zeros(( self.options['nbins'].value+2, self.options['nbins'].value+2))
         mod_heatmap[1:-1,1:-1] = heatmap.T
         #d_val = self.data[x_id]
-        #if hasattr(self.data[x_id], 'codes'):
-        #    d_val = self.data[x_id].codes
+        #if hasattr(self.data[x_id].flatten(), 'codes'):
+        #    d_val = self.data[x_id].flatten().codes
         
         traces = []
         trace = {
@@ -49,8 +47,8 @@ class GlueContourPlotly (GluePlotly):
                 'symbol':'circle', 'size': self.options['marker_size'].value, 'color': 'rgba(0, 0, 0, 0.4)',
                 'line' : { 'width' : self.options['line_width'].value, 'color' : 'rgba(0, 0, 0, 0.3)' }
             }),
-            'x': self.data[x_id],
-            'y': self.data[y_id],
+            'x': self.data[x_id].flatten(),
+            'y': self.data[y_id].flatten(),
         }
         if self.only_subsets == False:    
             traces.append(trace)
@@ -64,8 +62,8 @@ class GlueContourPlotly (GluePlotly):
                 }),
                 'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
                 'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                 
-                'x': sset[x_id],
-                'y': sset[y_id],
+                'x': sset[x_id].flatten(),
+                'y': sset[y_id].flatten(),
             }
             traces.append(trace)
 

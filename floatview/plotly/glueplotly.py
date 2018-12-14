@@ -3,7 +3,7 @@ from glue import core as gcore
 from floatview import Floatview
 from plotly.offline import init_notebook_mode
 from matplotlib import colors
-from ipywidgets import Output, Tab, Text, Dropdown
+from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox
 
 
 class GluePlotly():
@@ -19,31 +19,52 @@ class GluePlotly():
     modal = True
     only_subsets = False
     options = {}
+    margins = {}
     
     def __init__(self, data, dimensions, **kwargs):
         self.data = data
-        self.debug = kwargs.get('debug', None)
-        title = kwargs.get('title', "")
-        mode = kwargs.get('mode', "")
-        self.only_subsets = kwargs.get('only_subsets', False)
-        self.modal = kwargs.get('modal', True)
-        self.dimensions = dimensions
-        self.output_cont = Output()
-        self.options_cont = Output()
-        self.tab = Tab()
         self.options = {}
-        self.tab.children = [self.output_cont, self.options_cont]
-        self.tab.set_title(0, "View")
-        self.tab.set_title(1, "View Options")
+        self.margins = {}
+        self.dimensions = dimensions
+        self.debug = kwargs.get('debug', None)
+        self.modal = kwargs.get('modal', True)
+        self.only_subsets = kwargs.get('only_subsets', False)
+        self.output_cont = Output()
+        self.output_cont.layout.width = '100%'
+        self.options_cont = Output()
+        self.margins_cont = Output()
+
+        self.option_tab = Tab()
+        self.option_tab.children = [self.options_cont, self.margins_cont]
+        self.option_tab.set_title(0, "Plot")
+        self.option_tab.set_title(1, "Layout") 
+        self.option_tab.layout.display = 'none'
+
+
+        self.options_check = ToggleButton(value = False, description="Options", icon='cog')
+        self.options_check.observe(lambda v:self.showWidget(v["new"]), names='value')
+
+        self.tab = HBox()
+        self.tab.children = [self.option_tab, self.output_cont]
         init_notebook_mode(connected=True)        
         if (self.window == None) :
             if (self.modal == True):
+                title = kwargs.get('title', "")
+                mode = kwargs.get('mode', "")
                 self.window = Floatview(title = title, mode = mode)  
             else:
                 self.window = Output()
                 display(self.window)
+        self.DefaultMargins()
         self.displayWindow()
 
+    def showWidget(self, show):
+        if show:
+            self.option_tab.layout.display = None
+        else:
+            self.option_tab.layout.display = "None"
+       
+        
     def UpdateLayout(self, options):
         for key, value in options.items():
             try:
@@ -73,6 +94,16 @@ class GluePlotly():
         self.options['yscale'] = Dropdown( description = 'Yaxis Scale:', value = yscale, options = ['linear','log'])
         self.options['yscale'].observe(lambda v:self.UpdateLayout( {'yaxis.type':v['new']} ), names='value')
 
+    def DefaultMargins(self,l=50,r=0,b=50,t=30):
+        self.margins['left'] = IntText( description = 'Left:', value = l )
+        self.margins['left'].observe(lambda v:self.UpdateLayout( {'margin.l':v['new']} ), names='value')
+        self.margins['right'] = IntText( description = 'Right:', value = r )
+        self.margins['right'].observe(lambda v:self.UpdateLayout( {'margin.r':v['new']} ), names='value')
+        self.margins['bottom'] = IntText( description = 'Bottom:', value = b )
+        self.margins['bottom'].observe(lambda v:self.UpdateLayout( {'margin.b':v['new']} ), names='value')
+        self.margins['top'] = IntText( description = 'Top:', value = t )
+        self.margins['top'].observe(lambda v:self.UpdateLayout( {'margin.t':v['new']} ), names='value')
+        
     
     def display(self):
         self.displayOutput()
@@ -86,6 +117,7 @@ class GluePlotly():
     def displayWindow(self):   
         with self.window:
             clear_output()
+            display(self.options_check) 
             display(self.tab)
 
 
@@ -97,6 +129,10 @@ class GluePlotly():
                     display(option)
             else:
                 display("there are no options enabled for this Visualization")
+        with self.margins_cont:
+            clear_output()
+            for key, option in self.margins.items():
+                display(option)
 
             
     def setParent(self, parent): 

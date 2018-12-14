@@ -17,7 +17,7 @@ class GlueTablePlotly (GluePlotly):
     def createFigureWidget(self):        
         traces = []        
         dimensions = deepcopy(self.dimensions)
-        values = [self.data[col].tolist() for col in dimensions]  
+        values = [self.data[col].flatten().tolist() for col in dimensions]  
         header_colors = ["#444444" for col in dimensions]
         coll_fils = ["#F5F5F5" for col in dimensions]
         columnwidth = [80 for col in dimensions]
@@ -25,7 +25,7 @@ class GlueTablePlotly (GluePlotly):
             dimensions.append("") #sset.label)
             color = sset.style.color            
             header_colors.append(color)
-            m = sset.to_mask()
+            m = sset.to_mask().flatten()
             v = np.array(["#F5F5F5"]*len(m))
             v2 = np.array([""]*len(m))
             v[m] = color
@@ -57,10 +57,10 @@ class GlueTablePlotly (GluePlotly):
 
     def updateSelection(self, ids):
         dimensions = self.dimensions
-        values = [self.data[col][ids].tolist() for col in dimensions]
+        values = [self.data[col].flatten()[ids].tolist() for col in dimensions]
         coll_fils = ["#F5F5F5" for col in dimensions]        
         for sset in self.data.subsets:
-            m = sset.to_mask()    
+            m = sset.to_mask().flatten()
             color = sset.style.color            
             v2 = np.array([""]*len(ids))
             values.append(v2)

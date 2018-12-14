@@ -22,12 +22,8 @@ class GluePolyFitPlotly (GluePlotly):
         alpha_val = alpha_max
         polyfun = {}
         for i, y_id in enumerate(y_id_list):
-            with self.debug:
-                print(self.data[x_id])
-                print(self.data[y_id])
-                print(self.options['fit_degree'].value)
-            z = np.polyfit(self.data[x_id].astype('float'), self.data[y_id].astype('float'), self.options['fit_degree'].value)
-            polyfun[y_id] = np.poly1d(z)
+            z = np.polyfit(self.data[x_id].flatten().astype('float'), self.data[y_id].flatten().astype('float'), self.options['fit_degree'].value)
+            f = np.poly1d(z)
             color = "#444444"
             color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
             trace = {
@@ -36,14 +32,14 @@ class GluePolyFitPlotly (GluePlotly):
                     'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color }
                 }),
-                'x': self.data[x_id],
-                'y': self.data[y_id],
+                'x': self.data[x_id].flatten(),
+                'y': self.data[y_id].flatten(),
             }
             if self.only_subsets == False:
                 traces.append(trace)
-            x_new=self.data[x_id].astype('float').tolist()
+            x_new=self.data[x_id].flatten().astype('float').tolist()
             x_new.sort()
-            y_new = polyfun[y_id](x_new)
+            y_new = f(x_new)
             trace = {
                 'type': "scattergl", 'mode': "lines", 'name': self.data.label + "_fit_" + y_id,
                 'line' : { 'width' : self.options['line_width'].value, 'color' : color }, 
@@ -59,12 +55,10 @@ class GluePolyFitPlotly (GluePlotly):
         for sset in self.data.subsets:
             alpha_val = alpha_max        
             for i, y_id in enumerate(y_id_list):
-                z = np.polyfit(sset[x_id].astype('float'), sset[y_id].astype('float'), self.options['fit_degree'].value)
+                z = np.polyfit(sset[x_id].flatten().astype('float'), sset[y_id].flatten().astype('float'), self.options['fit_degree'].value)
                 f = np.poly1d(z)
                 color = sset.style.color
                 color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
-                with self.debug:
-                    print(color)
                 trace = {
                     'type': "scattergl", 'mode': "markers", 'name': sset.label + "_" + y_id,
                     'marker': dict({
@@ -73,15 +67,15 @@ class GluePolyFitPlotly (GluePlotly):
                     }),
                     'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
                     'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
-                    'x': sset[x_id],
-                    'y': sset[y_id],
+                    'x': sset[x_id].flatten(),
+                    'y': sset[y_id].flatten(),
 
                 }
                 traces.append(trace)  
                 
-                x_new=sset[x_id].astype('float').tolist()
+                x_new=sset[x_id].flatten().astype('float').tolist()
                 x_new.sort()
-                y_new = polyfun[y_id](x_new)
+                y_new = f(x_new)
                 trace = {
                     'type': "scattergl", 'mode': "lines", 'name': sset.label + "_fit_" + y_id,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color }, 

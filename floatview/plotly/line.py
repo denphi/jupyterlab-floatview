@@ -20,37 +20,42 @@ class GlueLinePlotly (GluePlotly):
     def createFigureWidget(self, x_id, y_id_list):
         traces = []
         alpha_min, alpha_max, alpha_delta = self.getDeltaFunction(len(y_id_list))
-        alpha_val = alpha_max        
+        alpha_val = alpha_max    
+        x_values = self.data[x_id].flatten()        
+        x_sort = x_values.argsort()
         for y_id in y_id_list:
+            y_values = self.data[y_id].flatten()
             color = "#444444"
             color = 'rgba'+str(self.getDeltaColor(color, alpha_val))
             trace = {
                 'type': "scattergl", 'mode': self.options['marker_type'].value, 'name': self.data.label + "_" + y_id,
                 'line' : { 'width' : self.options['line_width'].value, 'color' : color },
-                'x': self.data[x_id],
-                'y': self.data[y_id],
+                'x': x_values[x_sort],
+                'y': y_values[x_sort],
             }
             if self.only_subsets == False:
                 traces.append(trace)
             alpha_val = alpha_val - alpha_delta
             
         for sset in self.data.subsets:
-            alpha_val = alpha_max        
+            alpha_val = alpha_max   
+            x_values = sset[x_id].flatten()    
+            x_sort = x_values.argsort()
             for i, y_id in enumerate(y_id_list):
+                y_values = sset[y_id].flatten()            
                 color = sset.style.color
                 color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
                 trace = {
                     'type': "scattergl", 'mode': self.options['marker_type'].value, 'name': sset.label + "_" + y_id,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color},
-                    'x': sset[x_id],
-                    'y': sset[y_id],
+                    'x': x_values[x_sort],
+                    'y': y_values[x_sort],
                 }
                 traces.append(trace)  
-                alpha_val = alpha_val - alpha_delta
-                
+                alpha_val = alpha_val - alpha_delta                
 
         layout = {
-            'margin' : {'l':50,'r':0,'b':50,'t':30 },            
+            'margin' : {'l':50,'r':0,'b':50,'t':30 },
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
                 'type' : self.options['xscale'].value 

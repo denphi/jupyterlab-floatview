@@ -29,9 +29,9 @@ class GlueScatter3DPlotly (GluePlotly):
             'marker': dict({
                 'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
             }),
-            'x': self.data[x_id],
-            'y': self.data[y_id],
-            'z': self.data[z_id],
+            'x': self.data[x_id].flatten(),
+            'y': self.data[y_id].flatten(),
+            'z': self.data[z_id].flatten(),
         }
         if self.only_subsets == False:
             traces.append(trace)
@@ -43,9 +43,9 @@ class GlueScatter3DPlotly (GluePlotly):
                 'marker': dict({
                     'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
                 }),
-                'x': sset[x_id],
-                'y': sset[y_id],
-                'z': sset[z_id],
+                'x': sset[x_id].flatten(),
+                'y': sset[y_id].flatten(),
+                'z': sset[z_id].flatten(),
             }
             traces.append(trace)
 

@@ -15,9 +15,9 @@ class GlueErrorBarPlotly (GluePlotly):
         y_id_list=[self.dimensions[i] for i in range(1,len(self.dimensions))]
         d_val = self.data[x_id]
         if hasattr(self.data[x_id], 'codes'):
-            d_val = self.data[x_id].codes
-        hist, bin_edges  = np.histogram(d_val, bins='auto')
-        bin_list = bin_edges.searchsorted(d_val, 'right')
+            d_val = self.data[x_id].codes.flatten()
+        hist, bin_edges  = np.histogram(d_val.flatten(), bins='auto')
+        bin_list = bin_edges.searchsorted(d_val.flatten(), 'right')
         
         xedges = []
         for i in range(len(bin_edges)-1):
@@ -37,10 +37,8 @@ class GlueErrorBarPlotly (GluePlotly):
             y_min = []
             y_max = []
 
-            with self.debug:
-              for i in range(1, len(bin_edges)):
-                d_col = d_val[(bin_list == i)]
-                print(d_col)
+            for i in range(1, len(bin_edges)):
+                d_col = d_val[(bin_list == i)].flatten()
                 if len(d_col) > 0:
                     i_mean = d_col.mean()
                     i_min = d_col.min()

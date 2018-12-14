@@ -36,7 +36,7 @@ class GlueParallelCoordinatesPlotly (GluePlotly):
 
         for dimension in dimensions:
             line={}
-            line['values'] = self.data[dimension].tolist()
+            line['values'] = self.data[dimension].flatten().tolist()
             line['label'] = dimension
             for sset in self.data.subsets:
                 tmplist = sset[dimension].tolist()

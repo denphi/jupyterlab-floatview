@@ -9,6 +9,7 @@ from .plotly.parallelcoordinates import GlueParallelCoordinatesPlotly
 from .plotly.errorbar import GlueErrorBarPlotly
 from .plotly.polyfit import GluePolyFitPlotly
 from .plotly.line import GlueLinePlotly
+from .plotly.image import GlueImagePlotly
 from glue import core as gcore
 
 import itertools
@@ -176,11 +177,25 @@ class GlueManager:
             self.tables.append(gp);
             gp.setParent(self)
 
+        elif (type == "image"):
+            if len(components) == 1:
+                mdimensions = [[components[0],components[0],components[0]]]
+            elif len(components) == 2:
+                mdimensions = [[components[0],components[0],components[1]]]
+            else:
+                mdimensions = [[components[0],components[1],components[2]]]
+                mode = "tab-after"
+            if (len(self.scatter) == 0):
+                mode = "split-bottom"                    
+            gp = GlueImagePlotly(self.data, components, title=title, **kwargs)
+            self.tables.append(gp);
+            gp.setParent(self)
+
         return gp
 
     
     def listPlots(self):    
-        return ["scatter","composed_scatter","errorbar","composed_errorbar","composed_lines","scatter3D","contour","table","parallels", "histogram", "composed_polyfit_2d", "composed_polyfit_3d"]
+        return ["scatter","composed_scatter","composed_errorbar","composed_lines","errorbar","scatter3D","contour","table","parallels", "histogram", "composed_polyfit_2d", "composed_polyfit_3d","image"]
             
 
     def printInDebug(self, var):
@@ -321,16 +336,17 @@ class GlueManagerWidget(widgets.Tab):
 
     def createPlotsPanel(self):
         components = self.gluemanager.data.components
-        components.pop(0)
-        components.pop(0)
+        pixel_component_ids = self.gluemanager.data.pixel_component_ids
+        world_component_ids = self.gluemanager.data.world_component_ids
         
         v = []
         for k in components:
-            kt = str(k)
-            vv = widgets.ToggleButton(
-                value=False, tooltip=kt, description=kt
-            )
-            v.append(vv)
+            if k not in world_component_ids: #k not in pixel_component_ids and
+                kt = str(k)
+                vv = widgets.ToggleButton(
+                    value=False, tooltip=kt, description=kt
+                )
+                v.append(vv)
 
         tb = widgets.HBox(v)
 

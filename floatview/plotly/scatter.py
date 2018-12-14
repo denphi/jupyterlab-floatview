@@ -33,8 +33,8 @@ class GlueScatterPlotly (GluePlotly):
                     'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color }
                 }),
-                'x': self.data[x_id],
-                'y': self.data[y_id],
+                'x': self.data[x_id].flatten(),
+                'y': self.data[y_id].flatten(),
             }
             if self.only_subsets == False:
                 traces.append(trace)
@@ -53,8 +53,8 @@ class GlueScatterPlotly (GluePlotly):
                     }),
                     'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
                     'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
-                    'x': sset[x_id],
-                    'y': sset[y_id],
+                    'x': sset[x_id].flatten(),
+                    'y': sset[y_id].flatten(),
                 }
                 traces.append(trace)  
                 alpha_val = alpha_val - alpha_delta
@@ -62,7 +62,12 @@ class GlueScatterPlotly (GluePlotly):
 
         layout = {
             'title' : self.options['title'].value,
-            'margin' : {'l':50,'r':0,'b':50,'t':30 },            
+            'margin' : {
+                'l':self.margins['left'].value,
+                'r':self.margins['right'].value,
+                'b':self.margins['bottom'].value,
+                't':self.margins['top'].value 
+            },            
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
                 'type' : self.options['xscale'].value 
