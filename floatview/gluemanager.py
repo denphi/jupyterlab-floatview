@@ -19,7 +19,9 @@ class GlueManager:
     scatter = []
     debug = None
     selection = []
+    views = []    
     parent = None
+
     def __init__(self, data):
         self.scatter = []
         self.scatter3D = []
@@ -190,6 +192,9 @@ class GlueManager:
             gp = GlueImagePlotly(self.data, components, title=title, **kwargs)
             self.tables.append(gp);
             gp.setParent(self)
+
+        #if gp is not None:
+        #    self.views.append({'type':type,'components':components,'title':title, 'kwargs':kwargs })
 
         return gp
 

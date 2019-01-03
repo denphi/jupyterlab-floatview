@@ -11,11 +11,14 @@ the repository::
 
 Next, install it with a develop install using pip::
 
-    pip install -e .
+    pip3 install -e .
 
 Install the JupyterLab extension with::
 
     jupyter labextension install .
+    jupyter labextension install @jupyterlab/plotly-extension
+    jupyter labextension install plotlywidget@0.5.2
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager    
 
 
 .. links

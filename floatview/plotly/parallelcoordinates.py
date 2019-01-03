@@ -1,6 +1,7 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
 import plotly.graph_objs as go
+import numpy as np
   
 class GlueParallelCoordinatesPlotly (GluePlotly):
     default_size_marker = 3
@@ -36,10 +37,21 @@ class GlueParallelCoordinatesPlotly (GluePlotly):
 
         for dimension in dimensions:
             line={}
-            line['values'] = self.data[dimension].flatten().tolist()
+            if hasattr(self.data[dimension].flatten(), 'codes'):
+                line['values'] = self.data[dimension].flatten().codes.tolist()
+                tickvals, tickmask = np.unique(self.data[dimension].flatten().codes, return_index=True)
+                ticktext = self.data[dimension][tickmask]
+                line['tickvals'] = tickvals.tolist()
+                line['ticktext'] = ticktext.tolist()
+            else:
+                line['values'] = self.data[dimension].flatten().tolist()
+            
             line['label'] = dimension
             for sset in self.data.subsets:
-                tmplist = sset[dimension].tolist()
+                if hasattr(sset[dimension].flatten(), 'codes'):
+                    tmplist = sset[dimension].codes.tolist()
+                else:
+                    tmplist = sset[dimension].tolist()
                 line['values'].extend(tmplist)
             data_lines.append(line);
         data = [

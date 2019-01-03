@@ -4,6 +4,7 @@ from ipywidgets import IntText, BoundedIntText
 import numpy as np
 
 class GluePolyFitPlotly (GluePlotly):
+    polyfun = {}
     def __init__(self, data, dimensions, degree, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", self.dimensions[0], ' '.join([self.dimensions[i] for i in range(1,len(self.dimensions))]))
@@ -20,7 +21,7 @@ class GluePolyFitPlotly (GluePlotly):
         traces = []
         alpha_min, alpha_max, alpha_delta = self.getDeltaFunction(len(y_id_list))
         alpha_val = alpha_max
-        polyfun = {}
+        self.polyfun = {}
         for i, y_id in enumerate(y_id_list):
             z = np.polyfit(self.data[x_id].flatten().astype('float'), self.data[y_id].flatten().astype('float'), self.options['fit_degree'].value)
             f = np.poly1d(z)
@@ -51,6 +52,7 @@ class GluePolyFitPlotly (GluePlotly):
                 traces.append(trace)
             
             alpha_val = alpha_val - alpha_delta
+            self.polyfun[y_id] = f
             
         for sset in self.data.subsets:
             alpha_val = alpha_max        
@@ -85,7 +87,8 @@ class GluePolyFitPlotly (GluePlotly):
                 }
                 traces.append(trace)                
                 alpha_val = alpha_val - alpha_delta
-                
+                self.polyfun[sset.label + "_" + y_id] = f
+
 
         layout = {
             'title' : self.options['title'].value,

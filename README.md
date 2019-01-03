@@ -12,7 +12,7 @@ If you use jupyterlab:
 ```bash
 pip install floatview
 jupyter labextension install @jupyterlab/plotly-extension
-jupyter labextension install plotlywidget@0.5.1
+jupyter labextension install plotlywidget@0.5.2
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
 jupyter labextension install jupyterlab-floatview
 ```

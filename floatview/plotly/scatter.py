@@ -2,7 +2,7 @@ from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
 from ipywidgets import IntText
 from IPython.display import clear_output
-
+import numpy as np
 
 class GlueScatterPlotly (GluePlotly):
     default_size_marker = 3
@@ -24,17 +24,34 @@ class GlueScatterPlotly (GluePlotly):
         traces = []
         alpha_min, alpha_max, alpha_delta = self.getDeltaFunction(len(y_id_list))
         alpha_val = alpha_max   
+        xtickmode = "auto"
+        xtickvals = None
+        xticktext = None        
+        if hasattr(self.data[x_id].flatten(), 'codes'):
+            x_val = self.data[x_id].flatten().codes.tolist()
+            tickvals, tickmask = np.unique(self.data[x_id].flatten().codes, return_index=True)
+            ticktext = self.data[x_id][tickmask]
+            xtickmode = "array"
+            xtickvals = tickvals.tolist()
+            xticktext = ticktext.tolist()            
+        else:
+            x_val = self.data[x_id].flatten()
         for y_id in y_id_list:
             color = "#444444"
-            color = 'rgba'+str(self.getDeltaColor(color, alpha_val))
+            color = 'rgba'+str(self.getDeltaColor(color, alpha_val))                        
+            if hasattr(self.data[y_id].flatten(), 'codes'):
+                y_val = self.data[y_id].flatten().codes.tolist()
+            else:
+                y_val = self.data[y_id].flatten()
+                
             trace = {
                 'type': "scattergl", 'mode': "markers", 'name': self.data.label + "_" + y_id,
                 'marker': dict({
                     'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
                     'line' : { 'width' : self.options['line_width'].value, 'color' : color }
                 }),
-                'x': self.data[x_id].flatten(),
-                'y': self.data[y_id].flatten(),
+                'x': x_val,
+                'y': y_val,
             }
             if self.only_subsets == False:
                 traces.append(trace)
@@ -42,7 +59,12 @@ class GlueScatterPlotly (GluePlotly):
             
         for sset in self.data.subsets:
             alpha_val = alpha_max        
+            if hasattr(sset[x_id].flatten(), 'codes'):
+                x_val = sset[x_id].flatten().codes.tolist()
+            else:
+                x_val = sset[x_id].flatten()
             for i, y_id in enumerate(y_id_list):
+                y_val = sset[y_id].flatten().astype('float')
                 color = sset.style.color
                 color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))             
                 trace = {
@@ -53,8 +75,8 @@ class GlueScatterPlotly (GluePlotly):
                     }),
                     'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
                     'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
-                    'x': sset[x_id].flatten(),
-                    'y': sset[y_id].flatten(),
+                    'x': x_val,
+                    'y': y_val,
                 }
                 traces.append(trace)  
                 alpha_val = alpha_val - alpha_delta
@@ -70,7 +92,10 @@ class GlueScatterPlotly (GluePlotly):
             },            
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
-                'type' : self.options['xscale'].value 
+                'type' : self.options['xscale'].value,
+                'tickmode' : xtickmode,
+                'tickvals' : xtickvals,
+                'ticktext' : xticktext,
             },
             'yaxis': { 'autorange':True, 'zeroline': True, 
                 'title' : self.options['yaxis'].value, 
