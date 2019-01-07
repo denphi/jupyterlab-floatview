@@ -1,7 +1,23 @@
-# Floatview
+# plotly.py
 
-[![Build Status](https://travis-ci.org/jupyter-widgets/jupyterlab-floatview.svg?branch=master)](https://travis-ci.org/jupyter-widgets/jupyterlab-floatview)
-[![codecov](https://codecov.io/gh/jupyter-widgets/jupyterlab-floatview/branch/master/graph/badge.svg)](https://codecov.io/gh/jupyter-widgets/jupyterlab-floatview)
+<table>
+    <tr>
+        <td>Latest Release</td>
+        <td>
+            <a href="https://pypi.org/project/floatview/"/>
+            <img src="https://badge.fury.io/py/floatview.svg"/>
+        </td>
+    </tr>
+    <tr>
+        <td>PyPI Downloads</td>
+        <td>
+            <a href="https://pepy.tech/project/floatview"/>
+            <img src="https://pepy.tech/badge/floatview/month"/>
+        </td>
+    </tr>
+</table>
+
+# Floatview
 
 A floatview output widget for JupyterLab and a data explorer for glue/iplotly
 

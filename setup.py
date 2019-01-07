@@ -52,17 +52,22 @@ cmdclass['jsdeps'] = combine_commands(
     ensure_targets(jstargets),
 )
 
+long_description = ""
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup_args = dict(
     name            = name,
     description     = 'A floatview output widget for JupyterLab + GlueViz Visualization with plotly',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     version         = version,
     scripts         = glob(pjoin('scripts', '*')),
     cmdclass        = cmdclass,
     packages        = find_packages(),
     author          = 'Project Jupyter contributor',
-    author_email    = 'ipython-dev@scipy.org',
-    url             = '',
+    author_email    = 'denphi@denphi.com',
+    url             = 'https://github.com/denphi/jupyterlab-floatview',
     license         = 'BSD',
     platforms       = "Linux, Mac OS X, Windows",
     keywords        = ['Jupyter', 'Widgets', 'IPython'],
