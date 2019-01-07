@@ -80,8 +80,8 @@ setup_args = dict(
     include_package_data = True,
     install_requires = [
         'ipywidgets>=7.0.0',
-        'plotly>=3.4.2',
-        'glueviz>=0.14.0',
+        'plotly==3.5.0',
+        'glueviz==0.14.0',
     ],
     extras_require = {
         'test': [

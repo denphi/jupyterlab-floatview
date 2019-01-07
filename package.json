@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-floatview",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A floatview output widget for JupyterLab",
   "keywords": [
     "jupyter",
@@ -42,7 +42,7 @@
     "@jupyter-widgets/base": "^1.2.2",
     "@jupyter-widgets/jupyterlab-manager": "0.38.1",
     "@jupyterlab/plotly-extension": "0.18.1",
-    "plotlywidget": "0.5.2"
+    "plotlywidget": "0.6.0"
   },
   "devDependencies": {
     "@phosphor/application": "^1.6.0",
