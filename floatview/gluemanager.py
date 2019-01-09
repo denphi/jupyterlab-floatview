@@ -14,22 +14,71 @@ from glue import core as gcore
 
 import itertools
 
+class GlueManagerFactory:
+    plot_list = {}
+    
+    def __init__(self):   
+        self.registerGluePlot("scatter", GlueScatterPlotly,2)
+        self.registerGluePlot("errorbar", GlueErrorBarPlotly,2)                
+        self.registerGluePlot("composed_polyfit_2d", GluePolyFitPlotly, None, {'degree':2})
+        self.registerGluePlot("composed_polyfit_3d", GluePolyFitPlotly, None, {'degree':3})
+        self.registerGluePlot("scatter3D", GlueScatter3DPlotly, 3)                
+        self.registerGluePlot("contour", GlueContourPlotly, 2)                
+        self.registerGluePlot("table", GlueTablePlotly)
+        self.registerGluePlot("parallels", GlueParallelCoordinatesPlotly)
+        self.registerGluePlot("histogram", GlueHistogramPlotly, 1)                             
+        self.registerGluePlot("composed_errorbar", GlueErrorBarPlotly)                
+        self.registerGluePlot("composed_scatter", GlueScatterPlotly)                            
+        self.registerGluePlot("composed_errorbar", GlueScatterPlotly)                                
+        self.registerGluePlot("composed_lines", GlueLinePlotly)
+        self.registerGluePlot("image", GlueImagePlotly, 3)
+            
+    
+    def listPlots(self):    
+        return list(self.plot_list.keys());
+        
+    def registerGluePlot(self, type, func, dim=None, kwargs={}):
+        self.plot_list[type] = {'dim': dim, 'func' : func, 'kwargs':kwargs}
+
+    def createGluePlot(self, type, data, components, title="New View", **kwargs):
+        if type in self.plot_list:
+            dimensions = self.getDimensions(components,self.plot_list[type]['dim'])         
+            for key, value in self.plot_list[type]['kwargs'].items():
+                kwargs.setdefault(key, value)
+            return self.plot_list[type]['func'](data, dimensions, title=title, **kwargs);
+        return None;
+
+    def getDimensions(self, components, dim=None):
+        if dim is None:
+            return components
+        total_dimensions = len(components)
+        req_dimensions = dim
+        min_dimensions = min(req_dimensions,total_dimensions)
+        dimensions = []
+        for i in range(min_dimensions):
+            dimensions.append(components[i])
+        for i in range(min_dimensions, req_dimensions):
+            dimensions.insert(0,components[0])            
+        return dimensions
+    
+
 class GlueManager:
     data = None
-    scatter = []
     debug = None
     selection = []
-    views = []    
+    views = {}
+    active_views = {}
     parent = None
+    factory = None
 
     def __init__(self, data):
-        self.scatter = []
-        self.scatter3D = []
-        self.tables = []
         self.data = data
         self.parent = None
-        self.debug = widgets.Output()
         self.selection = []
+        self.debug = widgets.Output()
+        self.views = {}
+        self.active_views = {}
+        self.factory = GlueManagerFactory()
         
     def setNewData(self, data):
         self.data = data
@@ -46,161 +95,32 @@ class GlueManager:
             kwargs.setdefault('debug', self.debug)
                 
         gp = None
-        if (type == "scatter"):
-            if len(components) == 1:
-                mdimensions = [[components[0],components[0]]]
-            elif len(components) == 2:
-                mdimensions = [[components[0],components[1]]]
-            else:
-                mdimensions = list(itertools.combinations(components, 2))
-            for dimensions in mdimensions:
-                mode = "tab-after"
-                if (len(self.scatter) == 0):
-                    mode = "split-bottom"
-                    
-                gp = GlueScatterPlotly(self.data, dimensions, title=title, **kwargs)
-                self.scatter.append(gp);
-                gp.setParent(self)
+        mode = "tab-after"
+        if (len(self.active_views.values()) == 0):
+            mode = "split-bottom"                    
+        kwargs.setdefault('mode', mode)        
 
-        elif (type == "errorbar"):
-            if len(components) == 1:
-                mdimensions = [[components[0],components[0]]]
-            elif len(components) == 2:
-                mdimensions = [[components[0],components[1]]]
-            else:
-                mdimensions = list(itertools.combinations(components, 2))
-            for dimensions in mdimensions:
-                mode = "tab-after"
-                if (len(self.scatter) == 0):
-                    mode = "split-bottom"                    
-                gp = GlueErrorBarPlotly(self.data, dimensions, title=title, **kwargs)
-                self.tables.append(gp);
-                gp.setParent(self)
-                
-        elif (type == "composed_polyfit_2d" or type == "composed_polyfit_3d"):
-            mode = "tab-after"                        
-            degree = 2
-            if (type == "composed_polyfit_3d"):
-                degree = 3
-            if (len(self.tables) == 0):
-                mode = "split-right"               
-            gp = GluePolyFitPlotly(self.data, components, degree, title=title, **kwargs)                
-            self.tables.append(gp);
+        gp = self.factory.createGluePlot(type, self.data, components, title, **kwargs)
+        
+        
+        if gp is not None:
             gp.setParent(self)
-            
-        elif (type == "scatter3D"):
-            if len(components) == 1:
-                mdimensions = [[components[0],components[0],components[0]]]
-            elif len(components) == 2:
-                mdimensions = [[components[0],components[0],components[1]]]
-            else:
-                mdimensions = list(itertools.combinations(components, 3))
-            for dimensions in mdimensions:
-                mode = "tab-after"
-                if (len(self.scatter3D) == 0):
-                    mode = "split-right"
-                gp = GlueScatter3DPlotly(self.data, dimensions, title=title, **kwargs)
-                self.scatter3D.append(gp);
-                gp.setParent(self)
-                
-        elif (type == "contour"):
-            if len(components) == 1:
-                mdimensions = [[components[0],components[0]]]
-            elif len(components) == 2:
-                mdimensions = [[components[0],components[1]]]
-            else:
-                mdimensions = list(itertools.combinations(components, 2))
-            for dimensions in mdimensions:
-                mode = "tab-after"
-                if (len(self.scatter) == 0):
-                    mode = "split-bottom"
-                gp = GlueContourPlotly(self.data, dimensions, title=title, **kwargs)
-                self.scatter.append(gp);
-                gp.setParent(self)
-
-                
-        elif (type == "table"):
-            mode = "tab-after"            
-            if (len(self.tables) == 0):
-                mode = "split-right"
-                
-            gp = GlueTablePlotly(self.data, components, title=title, **kwargs)
-            self.tables.append(gp);
-            gp.setParent(self)
-
-        elif (type == "parallels"):
-            mode = "tab-after"            
-            if (len(self.scatter) == 0):
-                mode = "split-bottom"                
-            gp = GlueParallelCoordinatesPlotly(self.data, components, title=title, **kwargs)
-            self.tables.append(gp);
-            gp.setParent(self)
-
-        elif (type == "histogram"):   
-            for dimension in components:
-                mode = "tab-after"            
-                if (len(self.tables) == 0):
-                    mode = "split-right"
-                gp = GlueHistogramPlotly(self.data, [dimension], title=title, **kwargs)
-                self.tables.append(gp);
-                gp.setParent(self)
-                
-                
-        elif (type == "composed_errorbar"):
-            mode = "tab-after"
-            if (len(self.scatter) == 0):
-                mode = "split-bottom"                    
-            gp = GlueErrorBarPlotly(self.data, components, title=title, **kwargs)
-            self.tables.append(gp);
-            gp.setParent(self)
-                
-        elif (type == "composed_scatter"):
-            mode = "tab-after"            
-            if (len(self.tables) == 0):
-                mode = "split-right"               
-            gp = GlueScatterPlotly(self.data, components, title=title, **kwargs)                
-            self.tables.append(gp);
-            gp.setParent(self)
-            
-        elif (type == "composed_errorbar"):
-            mode = "tab-after"            
-            if (len(self.tables) == 0):
-                mode = "split-right"               
-            gp = GlueScatterPlotly(self.data, components, title=title, **kwargs)                
-            self.tables.append(gp);
-            gp.setParent(self)            
-            
-                
-        elif (type == "composed_lines"):
-            mode = "tab-after"
-            if (len(self.scatter) == 0):
-                mode = "split-bottom"                    
-            gp = GlueLinePlotly(self.data, components, title=title, **kwargs)
-            self.tables.append(gp);
-            gp.setParent(self)
-
-        elif (type == "image"):
-            if len(components) == 1:
-                mdimensions = [[components[0],components[0],components[0]]]
-            elif len(components) == 2:
-                mdimensions = [[components[0],components[0],components[1]]]
-            else:
-                mdimensions = [[components[0],components[1],components[2]]]
-                mode = "tab-after"
-            if (len(self.scatter) == 0):
-                mode = "split-bottom"                    
-            gp = GlueImagePlotly(self.data, components, title=title, **kwargs)
-            self.tables.append(gp);
-            gp.setParent(self)
-
-        #if gp is not None:
-        #    self.views.append({'type':type,'components':components,'title':title, 'kwargs':kwargs })
-
+            key = id(gp.window)
+            self.active_views[key] = gp
+            self.views[key]={'type':type,'components':components,'title':title, 'kwargs':kwargs }
+            if isinstance(gp.window, Floatview):
+                gp.window.observe(lambda changes : GlueManager.removeViewIfDisposed(self,gp.window),'uid')           
+            self.parent.updateHistory()
         return gp
 
+    def removeViewIfDisposed(self,window):
+        key = id(window)
+        if(window.uid == "disposed"):
+            self.active_views.pop(key)
+            self.parent.updateHistory()
     
     def listPlots(self):    
-        return ["scatter","composed_scatter","composed_errorbar","composed_lines","errorbar","scatter3D","contour","table","parallels", "histogram", "composed_polyfit_2d", "composed_polyfit_3d","image"]
+        return self.factory.listPlots();
             
 
     def printInDebug(self, var):
@@ -210,19 +130,11 @@ class GlueManager:
                 
     def updateSelection(self,ids):
         self.selection = ids
-        for view in self.scatter3D:
-            view.updateSelection(ids)
-        for view in self.scatter:
-            view.updateSelection(ids)
-        for view in self.tables:
+        for view in self.active_views.values():
             view.updateSelection(ids)
 
     def updateTraces(self):
-        for view in self.scatter3D:
-            view.updateRender()
-        for view in self.scatter:
-            view.updateRender()
-        for view in self.tables:
+        for view in self.active_views.values():
             view.updateRender()
 
     def createSubsetFromSelection(self, label = 'data'):
@@ -266,13 +178,15 @@ class GlueManagerWidget(widgets.Tab):
         self.gluemanager.setParent(self)
         self.subsets = self.createSubsetsPanel()
         self.plots = self.createPlotsPanel()
+        self.history = self.createHistoryPanel()
         self.modal = modal
         self.debug = self.gluemanager.debug
         
-        self.children = [self.plots, self.subsets, self.debug]
+        self.children = [self.plots, self.subsets, self.history, self.debug]
         self.set_title(0, 'Plots')
         self.set_title(1, 'Subsets')
-        self.set_title(2, 'Debug')
+        self.set_title(2, 'History')
+        self.set_title(3, 'Debug')
         if (self.modal):
             modal_window = Floatview(title = "GMW("+str(id(self))+")", mode = "split-top")  
             with modal_window:
@@ -339,6 +253,40 @@ class GlueManagerWidget(widgets.Tab):
         
         return vb3
 
+    def createHistoryPanel(self):
+        self.activeui = widgets.SelectMultiple(
+            options=[],
+            value=[],
+            rows=4,
+            disabled=False
+        )
+        self.activeui.layout = widgets.Layout(width='99%')       
+        
+        self.historyui = widgets.SelectMultiple(
+            options=[],
+            value=[],
+            rows=4,
+            disabled=False
+        )
+        self.historyui.layout = widgets.Layout(width='99%')
+
+        bt = widgets.Button(
+            description = 'Recreate plot',
+            disabled=False,
+            button_style='', # 'success', 'info', 'warning', 'danger' or ''
+            tooltip='re creates plot',
+        )        
+        bt.on_click(lambda e : GlueManagerWidget.restorePlot(self))
+
+        hb4 = widgets.HBox([self.historyui, bt])        
+        vb4 = widgets.VBox([self.activeui, hb4])        
+        return vb4
+
+    def restorePlot(self):
+            list_val = list(self.gluemanager.views.values())
+            plot = list_val[self.historyui.index[0]]
+            self.gluemanager.newView(plot['type'], plot['components'], 'copy_' + plot['title'], **plot['kwargs'])
+        
     def createPlotsPanel(self):
         components = self.gluemanager.data.components
         pixel_component_ids = self.gluemanager.data.pixel_component_ids
@@ -394,8 +342,6 @@ class GlueManagerWidget(widgets.Tab):
         return widgets.Tab._repr_html_(self)
 
     def createNewView(self,e,dd, tb, tx, ss):
-        with self.debug:
-            print("asdasd")
         list_comp = []
         for vv in tb:
             if vv.value == True:
@@ -410,4 +356,9 @@ class GlueManagerWidget(widgets.Tab):
         
     def updateSubsets(self):
         self.subsetsui.options = [sset.label for sset in self.gluemanager.data.subsets]
+
+    def updateHistory(self):
+        self.activeui.options = [s.window.title for s in self.gluemanager.active_views.values()]
+        self.historyui.options = [(s['title'] + " - " + s['type']) for s in self.gluemanager.views.values()]
+        
         

@@ -3,7 +3,7 @@ from glue import core as gcore
 from floatview import Floatview
 from plotly.offline import init_notebook_mode
 from matplotlib import colors
-from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox
+from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox, Accordion
 
 
 class GluePlotly():

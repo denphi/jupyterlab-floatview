@@ -24,7 +24,8 @@ class FloatviewModel extends OutputModel {
       _view_module: FloatviewModel.view_module,
       _view_module_version: FloatviewModel.view_module_version,
       title: 'Floatview',
-	  mode: 'tab-after'
+	  mode: 'tab-after',
+	  uid: FloatviewModel.view_uid,
     };
   }
 
@@ -44,4 +45,6 @@ class FloatviewModel extends OutputModel {
   static view_name = 'FloatviewView';  // Set to null if no view
   static view_module = '@jupyter-widgets/jupyterlab-floatview';   // Set to null if no view
   static view_module_version = EXTENSION_SPEC_VERSION;
+  static view_uid = 'none';
+  
 }

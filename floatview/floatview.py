@@ -24,4 +24,8 @@ class Floatview(Output):
     _view_module_version = Unicode(EXTENSION_SPEC_VERSION).tag(sync=True)
     title = Unicode('Floatview').tag(sync=True)
     mode = Unicode('tab-after').tag(sync=True)
+    uid = Unicode('').tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Floatview, self).__init__(*args, **kwargs)    
 

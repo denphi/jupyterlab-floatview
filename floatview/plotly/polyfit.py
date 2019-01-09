@@ -5,16 +5,16 @@ import numpy as np
 
 class GluePolyFitPlotly (GluePlotly):
     polyfun = {}
-    def __init__(self, data, dimensions, degree, **kwargs):
+    def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", self.dimensions[0], ' '.join([self.dimensions[i] for i in range(1,len(self.dimensions))]))
         self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
         self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
         self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
+        degree = kwargs.get('degree', 2)        
         self.options['fit_degree'] = BoundedIntText(description = 'Fitting degree:', value = degree,min=2,max=8)
-        self.options['fit_degree'].observe(lambda v:self.updateRender(), names='value')        
-        
+        self.options['fit_degree'].observe(lambda v:self.updateRender(), names='value')                
         self.updateRender()
         
     def createFigureWidget(self, x_id, y_id_list):

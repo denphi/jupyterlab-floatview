@@ -20,12 +20,21 @@ import {
 } from '@jupyter-widgets/jupyterlab-manager/lib/output';
 
 import {
+    Message
+} from '@phosphor/messaging';
+
+import {
   FloatviewModel
 } from './widget';
 
 import {
   EXTENSION_SPEC_VERSION
 } from './version';
+
+import {
+  OutputArea
+} from '@jupyterlab/outputarea';
+
 
 import '../css/floatview.css';
 
@@ -41,6 +50,25 @@ const floatviewPlugin: JupyterLabPlugin<void> = {
 export default floatviewPlugin;
 
 
+class FloatViewOutputArea extends OutputArea{
+  container: OutputView;
+  processMessage(msg: Message) {
+    switch (msg.type) {
+    case 'close-request':
+      this.container.model.set('uid', String('disposed'));
+      this.container.model.save_changes();
+      this.dispose();
+      break;
+    }
+    super.processMessage(msg);
+
+  }  
+  setContainer( container : OutputView ){
+      this.container = container      
+  }
+  
+}
+            
 /**
  * Activate the widget extension.
  */
@@ -51,17 +79,20 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
       render() {
         if (!this.model.rendered) {
           super.render();
-          let w = this._outputView;
+          let w = new FloatViewOutputArea({
+              rendermime: this.model.widget_manager.rendermime,
+              contentFactory: OutputArea.defaultContentFactory,
+              model: this.model.outputs
+          });                 
+          this._outputView = w;
+          w.setContainer(this)          
           w.addClass('jupyterlab-floatview');
           w.addClass('jp-LinkedOutputView');
           w.title.label = this.model.get('title');
           w.title.closable = true;
-          /*w.title.closable = true;
-          app.shell['_rightHandler'].sideBar.tabCloseRequested.connect((sender : any, tab : any) => {
-              tab.title.owner.dispose();
-          });*/
-		  app.shell['_dockPanel']
           w.id = UUID.uuid4();
+          this.model.set('uid', String(w.id));
+          this.model.save_changes();
           if (Object.keys(this.model.views).length > 1) {
             w.node.style.display = 'none';
             let key = Object.keys(this.model.views)[0];
@@ -70,10 +101,10 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
             });
           } else {
             app.shell.addToMainArea(w, { mode: this.model.get('mode') });
-            /*app.shell.expandRight();*/
           }
         }
       }
+
     }
 
     registry.registerWidget({
