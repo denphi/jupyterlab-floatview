@@ -30,7 +30,7 @@ class GlueHistogramPlotly (GluePlotly):
             s_val = sset[x_id]
             if hasattr(sset[x_id], 'codes'):
                 s_val = sset[x_id].codes
-            hist, bin_edges  = np.histogram(s_val.flatten(), range=(bin_edges[0], bin_edges[len(bin_edges)-1]),bins=len(bin_edges))
+            hist, bin_edges2  = np.histogram(s_val.flatten(), range=(bin_edges[0], bin_edges[len(bin_edges)-1]),bins=(len(bin_edges)-1))
             color = sset.style.color
             trace = {
                 'type': "bar", 'name': sset.label,
