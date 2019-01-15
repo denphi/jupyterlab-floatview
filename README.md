@@ -1,4 +1,4 @@
-# plotly.py
+# Floatview Stats
 
 <table>
     <tr>
