@@ -13,7 +13,7 @@ class GluePolyFitPlotly (GluePlotly):
         self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
         self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
         degree = kwargs.get('degree', 2)        
-        self.options['fit_degree'] = BoundedIntText(description = 'Fitting degree:', value = degree,min=2,max=8)
+        self.options['fit_degree'] = BoundedIntText(description = 'Fitting degree:', value = degree,min=2,max=20)
         self.options['fit_degree'].observe(lambda v:self.updateRender(), names='value')                
         self.updateRender()
         

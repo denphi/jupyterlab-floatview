@@ -10,6 +10,7 @@ from .plotly.errorbar import GlueErrorBarPlotly
 from .plotly.polyfit import GluePolyFitPlotly
 from .plotly.line import GlueLinePlotly
 from .plotly.image import GlueImagePlotly
+from .plotly.sankey import GlueParallelSankeyPlotly
 from glue import core as gcore
 
 import itertools
@@ -32,6 +33,7 @@ class GlueManagerFactory:
         self.registerGluePlot("composed_errorbar", GlueScatterPlotly)                                
         self.registerGluePlot("composed_lines", GlueLinePlotly)
         self.registerGluePlot("image", GlueImagePlotly, 3)
+        self.registerGluePlot("sankey", GlueParallelSankeyPlotly)
             
     
     def listPlots(self):    
@@ -107,10 +109,10 @@ class GlueManager:
             gp.setParent(self)
             key = id(gp.window)
             self.active_views[key] = gp
-            self.views[key]={'type':type,'components':components,'title':title, 'kwargs':kwargs }
-            if isinstance(gp.window, Floatview):
+            if isinstance(gp.window, Floatview):                
                 gp.window.observe(lambda changes : GlueManager.removeViewIfDisposed(self,gp.window),'uid')           
-            self.parent.updateHistory()
+                self.parent.updateHistory()
+            self.views[key]={'type':type,'components':components,'title':title, 'kwargs':kwargs }
         return gp
 
     def removeViewIfDisposed(self,window):
@@ -357,8 +359,6 @@ class GlueManagerWidget(widgets.Tab):
     def updateSubsets(self):
         self.subsetsui.options = [sset.label for sset in self.gluemanager.data.subsets]
 
-    def updateHistory(self):
-        self.activeui.options = [s.window.title for s in self.gluemanager.active_views.values()]
+    def updateHistory(self):        
+        self.activeui.options = [s.window.title for s in self.gluemanager.active_views.values() if isinstance(s.window, Floatview)]
         self.historyui.options = [(s['title'] + " - " + s['type']) for s in self.gluemanager.views.values()]
-        
-        
