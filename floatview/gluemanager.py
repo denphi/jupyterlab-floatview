@@ -1,6 +1,7 @@
 from ipywidgets import widgets
 from .floatview import Floatview
 from .plotly.scatter import GlueScatterPlotly
+from .plotly.network import GlueNetworkPlotly
 from .plotly.scatter3d import GlueScatter3DPlotly
 from .plotly.contour import GlueContourPlotly
 from .plotly.table import GlueTablePlotly
@@ -34,7 +35,7 @@ class GlueManagerFactory:
         self.registerGluePlot("composed_lines", GlueLinePlotly)
         self.registerGluePlot("image", GlueImagePlotly, 3)
         self.registerGluePlot("sankey", GlueParallelSankeyPlotly)
-            
+        self.registerGluePlot("network", GlueNetworkPlotly, 2)
     
     def listPlots(self):    
         return list(self.plot_list.keys());
