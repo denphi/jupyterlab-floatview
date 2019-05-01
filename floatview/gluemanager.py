@@ -12,6 +12,7 @@ from .plotly.polyfit import GluePolyFitPlotly
 from .plotly.line import GlueLinePlotly
 from .plotly.image import GlueImagePlotly
 from .plotly.sankey import GlueParallelSankeyPlotly
+from .plotly.pca import GluePcaPlotly
 from glue import core as gcore
 
 import itertools
@@ -36,6 +37,7 @@ class GlueManagerFactory:
         self.registerGluePlot("image", GlueImagePlotly, 3)
         self.registerGluePlot("sankey", GlueParallelSankeyPlotly)
         self.registerGluePlot("network", GlueNetworkPlotly, 2)
+        self.registerGluePlot("pca", GluePcaPlotly)
     
     def listPlots(self):    
         return list(self.plot_list.keys());

@@ -73,8 +73,6 @@ class GlueScatterPlotly (GluePlotly):
                         'symbol':'circle', 'size': self.focused_size_marker, 'color': color,
                         'line' : { 'width' : self.options['line_width'].value, 'color' : color}      
                     }),
-                    'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
-                    'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
                     'x': x_val,
                     'y': y_val,
                 }
@@ -125,8 +123,6 @@ class GlueScatterPlotly (GluePlotly):
         #self.parent.printInDebug(ids)        
         self.plotly_fig.data[0].update(
             selectedpoints=ids,
-            selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
-            unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
         )
 
     def setSubset(self,trace,points,selector): 
