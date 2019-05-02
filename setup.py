@@ -86,7 +86,7 @@ setup_args = dict(
     install_requires = [
         'ipywidgets>=7.4.2',
         'plotly>=3.8.1',
-        'sklearn>=0.19.0',        
+        'scikit-learn>=0.19.0',        
         'glueviz>=0.14.0',
         'networkx>=2.2'
     ],
