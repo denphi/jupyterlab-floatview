@@ -30,7 +30,7 @@ pip install floatview
 jupyter labextension install @jupyterlab/plotly-extension@0.18.2
 jupyter labextension install plotlywidget@0.9.1
 jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.38.1
-jupyter labextension install jupyterlab-floatview@0.1.9
+jupyter labextension install jupyterlab-floatview@0.1.11
 ```
 
 ## Usage

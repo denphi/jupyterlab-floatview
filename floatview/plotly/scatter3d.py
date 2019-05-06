@@ -68,10 +68,11 @@ class GlueScatter3DPlotly (GluePlotly):
         GluePlotly.display(self)
 
     def updateSelection(self, ids):
+        pass;
         #self.parent.printInDebug(self.plotly_fig.data[0])        
-        self.plotly_fig.data[0].update(
-            selectedpoints=ids
-        )
+        #self.plotly_fig.data[0].update(
+        #    selectedpoints=ids
+        #)
 
     #def setSubset(self,trace,points,selector): 
     #    if(self.parent is not None):

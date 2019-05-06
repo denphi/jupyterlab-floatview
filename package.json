@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-floatview",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "description": "A floatview output widget for JupyterLab",
   "keywords": [
     "jupyter",

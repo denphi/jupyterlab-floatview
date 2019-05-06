@@ -20,6 +20,7 @@ class GluePlotly():
     only_subsets = False
     options = {}
     margins = {}
+    on_selection_callback = None
     
     def __init__(self, data, dimensions, **kwargs):
         self.data = data
@@ -159,7 +160,8 @@ class GluePlotly():
         return colors.to_rgba(rgb, alpha=alpha_val)
             
 
-            
+    def on_selection(self, callback):#append=False                                                                                                                                                      
+        self.on_selection_callback = callback #NOTE: each plot implements its own behaviour  
 
 
             
