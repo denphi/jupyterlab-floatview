@@ -13,6 +13,8 @@ from .plotly.line import GlueLinePlotly
 from .plotly.image import GlueImagePlotly
 from .plotly.sankey import GlueParallelSankeyPlotly
 from .plotly.pca import GluePcaPlotly
+from .plotly.corrcoef import GlueCorrelationsPlotly
+from .plotly.sunburst import GlueSunburstPlotly
 from glue import core as gcore
 
 import itertools
@@ -38,6 +40,8 @@ class GlueManagerFactory:
         self.registerGluePlot("sankey", GlueParallelSankeyPlotly)
         self.registerGluePlot("network", GlueNetworkPlotly, 2)
         self.registerGluePlot("pca", GluePcaPlotly)
+        self.registerGluePlot("corrcoef", GlueCorrelationsPlotly)
+        self.registerGluePlot("sunburst", GlueSunburstPlotly)
     
     def listPlots(self):    
         return list(self.plot_list.keys());
