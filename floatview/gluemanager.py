@@ -12,10 +12,12 @@ from .plotly.polyfit import GluePolyFitPlotly
 from .plotly.line import GlueLinePlotly
 from .plotly.image import GlueImagePlotly
 from .plotly.sankey import GlueParallelSankeyPlotly
+from .plotly.sankey import GlueSankeytreePlotly
 from .plotly.pca import GluePcaPlotly
 from .plotly.corrcoef import GlueCorrelationsPlotly
 from .plotly.sunburst import GlueSunburstPlotly
 from glue import core as gcore
+from glue.core.data import Data
 
 import itertools
 
@@ -42,6 +44,8 @@ class GlueManagerFactory:
         self.registerGluePlot("pca", GluePcaPlotly)
         self.registerGluePlot("corrcoef", GlueCorrelationsPlotly)
         self.registerGluePlot("sunburst", GlueSunburstPlotly)
+        self.registerGluePlot("sankeytree", GlueSankeytreePlotly)
+        GlueSankeytreePlotly
     
     def listPlots(self):    
         return list(self.plot_list.keys());
@@ -98,6 +102,7 @@ class GlueManager:
         
     def newView(self, type="scatter", components=[], title="New View", **kwargs):
         only_subsets = kwargs.get('only_subsets', False)
+        only_view = kwargs.get('only_view', False)
         if (self.parent is not None):
             kwargs.setdefault('modal', self.parent.modal)
         if (self.debug is not None):
@@ -109,22 +114,29 @@ class GlueManager:
             mode = "split-bottom"                    
         kwargs.setdefault('mode', mode)        
 
-        gp = self.factory.createGluePlot(type, self.data, components, title, **kwargs)
         
-        
+        if only_view is False:
+            gp = self.factory.createGluePlot(type, self.data, components, title, **kwargs)
+        else:
+            data = Data(label=self.data.label)
+            for c in components:
+                data.add_component(self.data[c, self.selection], label=c)        
+            gp = self.factory.createGluePlot(type, data, components, title, **kwargs)
+
         if gp is not None:
-            gp.setParent(self)
-            key = id(gp.window)
-            self.active_views[key] = gp
-            if isinstance(gp.window, Floatview):                
-                gp.window.observe(lambda changes : GlueManager.removeViewIfDisposed(self,gp.window),'uid')           
-                self.parent.updateHistory()
-            self.views[key]={'type':type,'components':components,'title':title, 'kwargs':kwargs }
+            if only_view is False:        
+                gp.setParent(self)
+                key = id(gp.window)
+                self.active_views[key] = gp
+                self.views[key]={'type':type,'components':components,'title':title, 'kwargs':kwargs }
+                if isinstance(gp.window, Floatview):                
+                    gp.window.observe(lambda changes : GlueManager.removeViewIfDisposed(self,gp.window),'uid')           
+                    self.parent.updateHistory()
         return gp
 
     def removeViewIfDisposed(self,window):
-        key = id(window)
         if(window.uid == "disposed"):
+            key = id(window)
             self.active_views.pop(key)
             self.parent.updateHistory()
     
@@ -172,7 +184,7 @@ class GlueManagerWidget(widgets.Tab):
     plots = None
     subsetsui = None
     modal = False
-    def __init__(self, gluemanager, modal=False, label=None):
+    def __init__(self, gluemanager, modal=False, label=None, display_console=True):
         widgets.Tab.__init__(self);
         if isinstance(gluemanager, GlueManager):
             self.gluemanager = gluemanager
@@ -180,7 +192,7 @@ class GlueManagerWidget(widgets.Tab):
             self.gluemanager = GlueManager(gluemanager)
         else:
             self.gluemanager = GlueManager(gcore.Data(**gluemanager))
-
+        self.display_console = display_console
         if (label is not None):
             self.gluemanager.data.label=label
         
@@ -196,14 +208,16 @@ class GlueManagerWidget(widgets.Tab):
         self.set_title(1, 'Subsets')
         self.set_title(2, 'History')
         self.set_title(3, 'Debug')
-        if (self.modal):
-            modal_window = Floatview(title = "GMW("+str(id(self))+")", mode = "split-top")  
-            with modal_window:
+        if self.display_console:
+            if (self.modal):
+                modal_window = Floatview(title = "GMW("+str(id(self))+")", mode = "split-top")              
+                with modal_window:
+                    display(self)
+            else:
                 display(self)
-        else:
-            display(self)
 
     def createSubsetsPanel(self):
+    
         self.subsetsui = widgets.SelectMultiple(
             options=[sset.label for sset in self.gluemanager.data.subsets],
             value=[],
@@ -263,6 +277,7 @@ class GlueManagerWidget(widgets.Tab):
         return vb3
 
     def createHistoryPanel(self):
+
         self.activeui = widgets.SelectMultiple(
             options=[],
             value=[],

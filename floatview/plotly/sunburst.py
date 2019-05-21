@@ -13,7 +13,7 @@ class GlueSunburstPlotly (GluePlotly):
     
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
-        self.DefaultLayoutTitles("", 'Dimensions', 'Dimensions')        
+        self.DefaultLayoutTitles('', '', '')        
         self.updateRender()
         
     def createFigureWidget(self):
@@ -38,8 +38,8 @@ class GlueSunburstPlotly (GluePlotly):
         ids = 1
         queue = deque()
         color_set = [
-            'rgb(255,255,255)'
-            'rgb(49,54,149)'
+            'rgb(255,255,255)',
+            'rgb(49,54,149)',
             'rgb(165,0,38)',
             'rgb(69,117,180)',
             'rgb(215,48,39)',
@@ -49,7 +49,11 @@ class GlueSunburstPlotly (GluePlotly):
             'rgb(253,174,97)',
             'rgb(224,243,248)',
             'rgb(254,224,144)',
-         ]
+        ]
+        c_diff = len(self.dimensions) - len(color_set)
+        if (c_diff >= 0):
+            color_set.extend(['rgb(254,224,144)' for c in range(c_diff+1)])
+        
         queue.append({'id':ids,'dimension':0, 'label':"Data", 'mask':[True for i in range(self.data.size)], 'parent':''})
         while len(queue) > 0:
             toprocess = queue.popleft()
@@ -113,25 +117,13 @@ class GlueSunburstPlotly (GluePlotly):
                 },
                 'colors' : colors
             },
+            'domain':{
+                'x': [0, 0.9],
+                'y': [0, 1],
+            },              
         }
         traces.append(trace)
-        for i in range(len(self.dimensions)):
-            dimension = self.dimensions[i]
-            trace = {
-                'type': "scatter",
-                'name' : dimension, 
-                'x' : [0],
-                'y' : [0],
-                'marker': {
-                    'color' : color_set[i+1],
-                    'line': {
-                        'width': 0,
-                    },
-                }
-            }
-            traces.append(trace)
-
-
+        
         layout = {
             'title' : self.options['title'].value,
             'margin' : {
@@ -142,13 +134,46 @@ class GlueSunburstPlotly (GluePlotly):
             },
             'showlegend': True,
             'xaxis': {
-                'side': 'top'
+                'title' : self.options['xaxis'].value,
+                'range' : [0,1],
+                'showgrid':False,
+                'showline':False,
+                'showticklabels':False,
+                'zeroline':False
             },
-            'legend' : {
-                'x':-.1,
-                'y':1.2
-            }
+            'yaxis': {
+                'title' : self.options['yaxis'].value,
+                'range' : [0,1],
+                'showgrid':False,
+                'showline':False,
+                'showticklabels':False,
+                'zeroline':False                
+            },            
         }
+        
+        for i in range(len(self.dimensions)):
+            dimension = self.dimensions[i]
+            trace = {
+                'type': "scatter",
+                'name' : dimension, 
+                'textposition' : 'middle right',
+                'x' : [-1000],
+                'y' : [i],
+                'mode' : 'markers',
+                'marker': {
+                    'color' : color_set[i+1],
+                    'size' : 20,
+                    'line': {
+                        'width': 0,
+                    },
+                    'symbol' : 'square'
+                }
+            }
+            traces.append(trace)
+
+
+
+
             
         return FigureWidget({
                 'data': traces,
@@ -158,11 +183,11 @@ class GlueSunburstPlotly (GluePlotly):
 
     def updateRender(self):		
         self.plotly_fig = self.createFigureWidget()
-        #if self.only_subsets == False:
-        #    self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), True)
 
-        #if self.on_selection_callback is not None:
-        #    self.plotly_fig.data[0].on_selection(self.on_selection_callback, True)
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_click(self.on_selection_callback, True)
         GluePlotly.display(self)
 
 
@@ -173,7 +198,14 @@ class GlueSunburstPlotly (GluePlotly):
         pass;
 
     def setSubset(self,trace,points,selector): 
-        #if(self.parent is not None):
-        #    self.parent.updateSelection(points.point_inds)
-        pass;    
-            
+        if(self.parent is not None):
+            mask = None
+            for p in points.point_inds:
+                if p > 0:
+                    if mask is None:
+                        mask = self.masks[p]
+                    else :
+                        mask = mask | self.masks[p+1]                        
+            if mask is not None:
+                point_inds = np.nonzero(mask)[0]
+                self.parent.updateSelection(point_inds)
