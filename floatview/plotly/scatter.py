@@ -115,10 +115,21 @@ class GlueScatterPlotly (GluePlotly):
 
     def updateRender(self):		
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], [self.dimensions[i] for i in range(1,len(self.dimensions))])
-        if self.only_subsets == False:
-            self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        self.updateCallbacks()
         GluePlotly.display(self)
 
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_selection(self.on_selection_callback, append)
+
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()
+        
     def updateSelection(self, ids):
         #self.parent.printInDebug(ids)        
         self.plotly_fig.data[0].update(

@@ -196,6 +196,9 @@ class GlueNetworkPlotly (GluePlotly):
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], self.dimensions[1])
         if self.only_subsets == False:
             self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_selection(self.on_selection_callback, True)
+            
         GluePlotly.display(self)
 
     def updateSelection(self, ids):

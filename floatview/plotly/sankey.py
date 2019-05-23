@@ -1,5 +1,6 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
+from ipywidgets import IntText
 import plotly.graph_objs as go
 import numpy as np
 from collections import deque
@@ -10,6 +11,8 @@ class GlueParallelSankeyPlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", "", "")        
+        self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
+        self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')
         self.updateRender()
         
     def createFigureWidget(self):
@@ -54,7 +57,7 @@ class GlueParallelSankeyPlotly (GluePlotly):
         for i, dimension in enumerate(dimensions):
             dvalues = np.unique(self.data[dimension].flatten())
         
-            if len(dvalues) < 15 or hasattr(self.data[dimension].flatten(), 'codes'):
+            if len(dvalues) < self.options['grouping_limit'].value or hasattr(self.data[dimension].flatten(), 'codes'):
                 nodes[i]['values'] = np.unique(self.data[dimension].flatten())
                 nodes[i]['local_nodes'] = [len(nodes_id)+cnt for cnt in range(len(nodes[i]['values']))]
                 nodes[i]['masks'] = []
@@ -62,6 +65,9 @@ class GlueParallelSankeyPlotly (GluePlotly):
                      nodes[i]['masks'].append(self.data[dimension] == val)
             else:
                 hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins='auto')
+                if (len(bin_edges) > self.options['grouping_limit'].value):
+                    hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins=self.options['grouping_limit'].value)
+                
                 nodes[i]['values'] = []
                 for edge in range(len(bin_edges)-1):
                     nodes[i]['values'].append( "{:.1f}".format(bin_edges[edge]) + " - " + "{:.1f}".format(bin_edges[edge+1]))
@@ -166,20 +172,28 @@ class GlueParallelSankeyPlotly (GluePlotly):
         FigureWidget(data = data, layout = layout)
         return FigureWidget(data = data, layout = layout)
         
-    def updateRender(self):
-        self.plotly_fig = self.createFigureWidget()
-        if self.only_subsets == False:
-            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), True)
-
-        if self.on_selection_callback is not None:
-            self.plotly_fig.data[0].on_click(self.on_selection_callback, True)
-        GluePlotly.display(self)
-
     def updateSelection(self, ids):
         #self.parent.printInDebug(self.plotly_fig.data[0])        
         self.plotly_fig.data[0].update(
             selectedpoints=ids
         )
+        
+    def updateRender(self):		
+        self.plotly_fig = self.createFigureWidget()
+        self.updateCallbacks();
+        GluePlotly.display(self)
+
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_click(self.on_selection_callback, append)
+
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()        
 
     def setSubset(self,trace,points,selector): 
         if(self.parent is not None):
@@ -203,7 +217,9 @@ class GlueSankeytreePlotly (GluePlotly):
     
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
-        self.DefaultLayoutTitles('', '', '')        
+        self.DefaultLayoutTitles('', '', '')
+        self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
+        self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')        
         self.updateRender()
         
     def createFigureWidget(self):
@@ -252,7 +268,7 @@ class GlueSankeytreePlotly (GluePlotly):
             id = toprocess['id']
             label = toprocess['label']
             value = np.count_nonzero(mask)
-            if value > 0:
+            if True: #value > 0:
                 labels.append(label)
                 sources.append(toprocess['parent'])
                 targets.append(id)
@@ -271,7 +287,7 @@ class GlueSankeytreePlotly (GluePlotly):
                             process['mask'] = (mask & (self.data[dimension] == val))
                             queue.append(process)
                                           
-                    elif len(dvalues) < 15:
+                    elif len(dvalues) < self.options['grouping_limit'].value:
                         for val in dvalues:
                             ids += 1
                             process = {'id':ids,'dimension':toprocess['dimension']+1, 'label':str(val), 'parent':toprocess['id']}
@@ -279,6 +295,8 @@ class GlueSankeytreePlotly (GluePlotly):
                             queue.append(process)
                     else:    
                         hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins='auto')
+                        if (len(bin_edges) > self.options['grouping_limit'].value):
+                            hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins=self.options['grouping_limit'].value)
                         for edge in range(len(bin_edges)-1):
                             ids += 1
                             label = "{:.1f}".format(bin_edges[edge]) + " - " + "{:.1f}".format(bin_edges[edge+1])
@@ -362,18 +380,24 @@ class GlueSankeytreePlotly (GluePlotly):
                 'data': traces,
                 'layout': layout
         })
-        
 
     def updateRender(self):		
         self.plotly_fig = self.createFigureWidget()
-        if self.only_subsets == False:
-            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), True)
-
-        if self.on_selection_callback is not None:
-            self.plotly_fig.data[0].on_click(self.on_selection_callback, True)
+        self.updateCallbacks();
         GluePlotly.display(self)
 
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_click(self.on_selection_callback, append)
 
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()
+        
     def updateSelection(self, ids):
         #self.plotly_fig.data[0].update(
         #    selectedpoints=ids,

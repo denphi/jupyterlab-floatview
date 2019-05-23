@@ -87,8 +87,7 @@ class GlueContourPlotly (GluePlotly):
         
     def updateRender(self):
         self.plotly_fig = self.createFigureWidget(self.dimensions[0], self.dimensions[1])    
-        if self.only_subsets == False:
-            self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        self.updateCallbacks()        
         GluePlotly.display(self)
 
     def updateSelection(self, ids):
@@ -97,6 +96,17 @@ class GlueContourPlotly (GluePlotly):
             selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.options['marker_size'].value}},
             unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.options['marker_size'].value}}
         )
+        
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[1].on_selection(lambda x,y,z : self.setSubset(x,y,z), append)
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[1].on_selection(self.on_selection_callback, append)
+
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()        
         
     def changeAxisScale(self, axis="yaxis",type="linear"):
         if (axis ==  'xaxis'):

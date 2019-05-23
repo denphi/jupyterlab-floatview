@@ -121,7 +121,8 @@ class GlueManager:
             data = Data(label=self.data.label)
             for c in components:
                 data.add_component(self.data[c, self.selection], label=c)        
-            gp = self.factory.createGluePlot(type, data, components, title, **kwargs)
+            if (data.size > 0):
+                gp = self.factory.createGluePlot(type, data, components, title, **kwargs)
 
         if gp is not None:
             if only_view is False:        

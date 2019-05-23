@@ -7,6 +7,7 @@
 from .floatview import Floatview
 from .gluemanager import GlueManager
 from .gluemanager import GlueManagerWidget
+from .dataexplorer import DataExplorer
 
 from ._version import __version__, version_info
 

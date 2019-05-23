@@ -52,10 +52,24 @@ class GlueHistogramPlotly (GluePlotly):
                 'data': traces,
                 'layout': layout
         })
-        
-    def updateRender(self):
+    
+    
+    def updateRender(self):		
         self.plotly_fig = self.createFigureWidget()
+        self.updateCallbacks();
         GluePlotly.display(self)
+
+    def updateCallbacks(self):	
+        append = False
+        '''if self.only_subsets == False:
+            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_click(self.on_selection_callback, append)'''
+
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()
 
     def updateSelection(self, ids):
         pass

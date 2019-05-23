@@ -115,13 +115,24 @@ class GluePcaPlotly (GluePlotly):
             self.pca = PCA(n_components=2)
         self.plotly_fig = self.createFigureWidget()
 
-        if self.only_subsets == False:
-            self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), True)
+        self.updateCallbacks()
 
-        if self.on_selection_callback is not None:
-            self.plotly_fig.data[0].on_selection(self.on_selection_callback, True)
         GluePlotly.display(self)
 
+
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_selection(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_selection(self.on_selection_callback, append)
+            
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()
+        
 
     def updateSelection(self, ids):
         self.plotly_fig.data[0].update(

@@ -13,7 +13,10 @@ class GlueSunburstPlotly (GluePlotly):
     
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
-        self.DefaultLayoutTitles('', '', '')        
+        
+        self.DefaultLayoutTitles('', '', '')
+        self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
+        self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')
         self.updateRender()
         
     def createFigureWidget(self):
@@ -79,7 +82,7 @@ class GlueSunburstPlotly (GluePlotly):
                             process['mask'] = (mask & (self.data[dimension] == val))
                             queue.append(process)
                                           
-                    elif len(dvalues) < 15:
+                    elif len(dvalues) < self.options['grouping_limit'].value:
                         for val in dvalues:
                             ids += 1
                             process = {'id':ids,'dimension':toprocess['dimension']+1, 'label':str(val), 'parent':toprocess['id']}
@@ -87,6 +90,8 @@ class GlueSunburstPlotly (GluePlotly):
                             queue.append(process)
                     else:    
                         hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins='auto')
+                        if (len(bin_edges) > self.options['grouping_limit'].value):
+                            hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins=self.options['grouping_limit'].value)                        
                         for edge in range(len(bin_edges)-1):
                             ids += 1
                             label = "{:.1f}".format(bin_edges[edge]) + " - " + "{:.1f}".format(bin_edges[edge+1])
@@ -183,13 +188,20 @@ class GlueSunburstPlotly (GluePlotly):
 
     def updateRender(self):		
         self.plotly_fig = self.createFigureWidget()
-        if self.only_subsets == False:
-            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), True)
-
-        if self.on_selection_callback is not None:
-            self.plotly_fig.data[0].on_click(self.on_selection_callback, True)
+        self.updateCallbacks();
         GluePlotly.display(self)
 
+    def updateCallbacks(self):	
+        append = False
+        if self.only_subsets == False:
+            self.plotly_fig.data[0].on_click(lambda x,y,z : self.setSubset(x,y,z), append)
+            append = True
+        if self.on_selection_callback is not None:
+            self.plotly_fig.data[0].on_click(self.on_selection_callback, append)
+
+    def on_selection(self, callback):
+        GluePlotly.on_selection(self, callback)
+        self.updateCallbacks()
 
     def updateSelection(self, ids):
         #self.plotly_fig.data[0].update(
