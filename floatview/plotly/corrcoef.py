@@ -1,6 +1,6 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
-from ipywidgets import IntText, Dropdown
+from ipywidgets import IntText, Dropdown, BoundedIntText
 from IPython.display import clear_output
 import numpy as np
 
@@ -80,28 +80,29 @@ class GlueCorrelationsPlotly (GluePlotly):
                     layout['annotations'].append(result);
 
         for sset in self.data.subsets:
-            params = []
-            for param in self.dimensions:
-                if hasattr(sset[param].flatten(), 'codes'):
-                    params.append(sset[param].flatten().codes.tolist())
-                else:
-                    params.append(sset[param].flatten())
-            mat = np.corrcoef(params)
-            mat = np.nan_to_num(mat, 1)
-            mat = np.flip(mat, axis=1)
-            trace = {
-                'type' : 'heatmap',
-                'x' : self.dimensions[::-1],
-                'y' : self.dimensions,
-                'z' : mat,
-                'colorscale': 'RdBu',
-                'autocolorscale' : False,
-                'reversescale' : True,
-                'zauto' : False,
-                'zmin' : -1,
-                'zmax' : 1,
-            }
-            traces.append(trace)
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                params = []
+                for param in self.dimensions:
+                    if hasattr(sset[param].flatten(), 'codes'):
+                        params.append(sset[param].flatten().codes.tolist())
+                    else:
+                        params.append(sset[param].flatten())
+                mat = np.corrcoef(params)
+                mat = np.nan_to_num(mat, 1)
+                mat = np.flip(mat, axis=1)
+                trace = {
+                    'type' : 'heatmap',
+                    'x' : self.dimensions[::-1],
+                    'y' : self.dimensions,
+                    'z' : mat,
+                    'colorscale': 'RdBu',
+                    'autocolorscale' : False,
+                    'reversescale' : True,
+                    'zauto' : False,
+                    'zmin' : -1,
+                    'zmax' : 1,
+                }
+                traces.append(trace)
 
             for i in range (len(self.dimensions)):
                 for j in range (len(self.dimensions)):

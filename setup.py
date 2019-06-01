@@ -88,7 +88,8 @@ setup_args = dict(
         'plotly>=3.8.1',
         'scikit-learn>=0.19.0',        
         'glueviz>=0.14.0',
-        'networkx>=2.2'
+        'networkx>=2.2',
+        'colorlover>=0.3.0'
     ],
     extras_require = {
         'test': [

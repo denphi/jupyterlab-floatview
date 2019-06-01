@@ -1,22 +1,22 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
 import numpy as np
-from ipywidgets import IntText
+from ipywidgets import IntText, BoundedIntText
 
 class GlueContourPlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", self.dimensions[0], self.dimensions[1])
         self.DefaultLayoutScales("linear","linear");
-        self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
+        self.options['line_width'] = BoundedIntText(description = 'Lines width:', value = 1, min=0, max=10)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
-        self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
-        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new'],'selected.marker.size':v['new'],'unselected.marker.size':v['new']}), names='value')        
+        self.options['marker_size'] = BoundedIntText(description = 'Markers size:', value = 3, min=0, max=15)
+        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
         self.options['ncontours'] = IntText(description = '# Contours:', value = 1)
         self.options['ncontours'].observe(lambda v:self.UpdateTraces({'ncontours':v['new']}), names='value')        
         self.options['nbins'] = IntText(description = 'Number of Bins', value = 40)
         self.options['nbins'].observe(lambda v:self.updateRender(), names='value')        
-        
+        self.DefaultLegend('v', 1.02, 1.0);        
         self.updateRender()
         
     def createFigureWidget(self, x_id, y_id):
@@ -53,32 +53,46 @@ class GlueContourPlotly (GluePlotly):
         if self.only_subsets == False:    
             traces.append(trace)
         for sset in self.data.subsets:
-            color = sset.style.color
-            trace = {
-                'type': "scattergl", 'mode': "markers", 'name': sset.label,
-                'marker': dict({
-                    'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
-                    'line' : { 'width' : self.options['line_width'].value, 'color' : '#000000'}      
-                }),
-                'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
-                'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                 
-                'x': sset[x_id].flatten(),
-                'y': sset[y_id].flatten(),
-            }
-            traces.append(trace)
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                color = sset.style.color
+                trace = {
+                    'type': "scattergl", 'mode': "markers", 'name': sset.label,
+                    'marker': dict({
+                        'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
+                        'line' : { 'width' : self.options['line_width'].value, 'color' : '#000000'}      
+                    }),
+                    'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
+                    'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                 
+                    'x': sset[x_id].flatten(),
+                    'y': sset[y_id].flatten(),
+                }
+                traces.append(trace)
 
         layout = {
             'title' : self.options['title'].value,
             'margin' : {'l':50,'r':0,'b':50,'t':30 },            
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
-                'type' : self.options['xscale'].value 
+                'type' : self.options['xscale'].value,
+                'linecolor' : self.data.get_component(x_id).color,
+                'tickcolor' : self.data.get_component(x_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },
             'yaxis': { 'autorange':True, 'zeroline': True, 
                 'title' : self.options['yaxis'].value, 
-                'type' : self.options['yscale'].value
+                'type' : self.options['yscale'].value,
+                'linecolor' : self.data.get_component(y_id).color,
+                'tickcolor' : self.data.get_component(y_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },
-            'showlegend': True,
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            },            
         }        
         return FigureWidget({
                 'data': traces,

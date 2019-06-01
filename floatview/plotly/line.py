@@ -1,6 +1,6 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
-from ipywidgets import Dropdown, IntText
+from ipywidgets import Dropdown, IntText, BoundedIntText
 from IPython.display import clear_output
 
 
@@ -12,9 +12,10 @@ class GlueLinePlotly (GluePlotly):
         self.DefaultLayoutTitles("", self.dimensions[0], ' '.join([self.dimensions[i] for i in range(1,len(self.dimensions))]))
         self.DefaultLayoutScales("linear","linear");
         self.options['marker_type'] = Dropdown( description = 'Marker type:', value = 'lines', options = ['lines','lines+markers','lines+text'])
-        self.options['marker_type'].observe(lambda v:self.UpdateTraces({'mode':v['new']}), names='value')        
-        self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
+        self.options['marker_type'].observe(lambda v:self.UpdateTraces({'mode':v['new']}), names='value')       
+        self.options['line_width'] = BoundedIntText(description = 'Lines width:', value = 1, min=0, max=10)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
+        self.DefaultLegend('v', 1.02, 1.0);                
         self.updateRender() 
     
     def createFigureWidget(self, x_id, y_id_list):
@@ -38,33 +39,50 @@ class GlueLinePlotly (GluePlotly):
             alpha_val = alpha_val - alpha_delta
             
         for sset in self.data.subsets:
-            alpha_val = alpha_max   
-            x_values = sset[x_id].flatten()    
-            x_sort = x_values.argsort()
-            for i, y_id in enumerate(y_id_list):
-                y_values = sset[y_id].flatten()            
-                color = sset.style.color
-                color = 'rgba'+str(self.getDeltaColor(color, alpha_val, i))
-                trace = {
-                    'type': "scattergl", 'mode': self.options['marker_type'].value, 'name': sset.label + "_" + y_id,
-                    'line' : { 'width' : self.options['line_width'].value, 'color' : color},
-                    'x': x_values[x_sort],
-                    'y': y_values[x_sort],
-                }
-                traces.append(trace)  
-                alpha_val = alpha_val - alpha_delta                
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                alpha_val = alpha_max   
+                x_values = sset[x_id].flatten()    
+                x_sort = x_values.argsort()
+                for step, y_id in enumerate(y_id_list):
+                    y_values = sset[y_id].flatten()            
+                    color = sset.style.color
+                    color = 'rgba'+str(self.getDeltaColor(color, alpha_val, step))
+                    trace = {
+                        'type': "scattergl", 'mode': self.options['marker_type'].value, 'name': sset.label + "_" + y_id,
+                        'line' : { 'width' : self.options['line_width'].value, 'color' : color},
+                        'x': x_values[x_sort],
+                        'y': y_values[x_sort],
+                    }
+                    traces.append(trace)  
+                    alpha_val = alpha_val - alpha_delta                
+        y_color = 'rgb(0,0,0)'
+        if len(y_id_list) == 1:
+            y_color = self.data.get_component(y_id_list[0]).color
 
         layout = {
             'margin' : {'l':50,'r':0,'b':50,'t':30 },
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
-                'type' : self.options['xscale'].value 
+                'type' : self.options['xscale'].value ,
+                'linecolor' : self.data.get_component(x_id).color,
+                'tickcolor' : self.data.get_component(x_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },
             'yaxis': { 'autorange':True, 'zeroline': True, 
                 'title' : self.options['yaxis'].value, 
-                'type' : self.options['yscale'].value
+                'type' : self.options['yscale'].value,
+                'linecolor' : y_color,
+                'tickcolor' : y_color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },            
-            'showlegend': True,
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            },               
         }
         return FigureWidget({
                 'data': traces,

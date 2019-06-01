@@ -4,19 +4,27 @@ from ipywidgets import IntText, Dropdown
 from IPython.display import clear_output
 import numpy as np
 from collections import deque
+import colorlover as cl
 
 class GlueSunburstPlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
     pca = None
     options = {}
-    
+    default_color = "Dataset"
+   
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         
         self.DefaultLayoutTitles('', '', '')
         self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
         self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')
+        cl_options = list(cl.scales['8']['qual'].keys())
+        cl_options.append(GlueSunburstPlotly.default_color)
+        self.options['colorscale'] = Dropdown(description = 'Color Palette:', value = GlueSunburstPlotly.default_color, options = cl_options)
+        self.options['colorscale'].observe(lambda v:self.updateRender(), names='value')
+        self.DefaultLegend('v', 1.02, 1.0);
+        
         self.updateRender()
         
     def createFigureWidget(self):
@@ -40,22 +48,14 @@ class GlueSunburstPlotly (GluePlotly):
         df = self.data.to_dataframe()
         ids = 1
         queue = deque()
-        color_set = [
-            'rgb(255,255,255)',
-            'rgb(49,54,149)',
-            'rgb(165,0,38)',
-            'rgb(69,117,180)',
-            'rgb(215,48,39)',
-            'rgb(116,173,209)',
-            'rgb(244,109,67)',
-            'rgb(171,217,233)',
-            'rgb(253,174,97)',
-            'rgb(224,243,248)',
-            'rgb(254,224,144)',
-        ]
-        c_diff = len(self.dimensions) - len(color_set)
-        if (c_diff >= 0):
-            color_set.extend(['rgb(254,224,144)' for c in range(c_diff+1)])
+        if self.options['colorscale'].value == GlueSunburstPlotly.default_color:
+            color_set = [self.data.get_component(dim).color for dim in self.dimensions]
+        else:
+            color_set = cl.scales['8']['qual'][self.options['colorscale'].value]
+            if (len(self.dimensions) > 8):
+                color_set = cl.interp( color_set, len(dimensions) )
+            color_set = cl.to_rgb(color_set)
+        color_set.insert(0,'rgb(255,255,255)')    
         
         queue.append({'id':ids,'dimension':0, 'label':"Data", 'mask':[True for i in range(self.data.size)], 'parent':''})
         while len(queue) > 0:
@@ -153,7 +153,13 @@ class GlueSunburstPlotly (GluePlotly):
                 'showline':False,
                 'showticklabels':False,
                 'zeroline':False                
-            },            
+            },      
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            }
         }
         
         for i in range(len(self.dimensions)):

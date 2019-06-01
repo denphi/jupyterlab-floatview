@@ -6,6 +6,7 @@ class GlueHistogramPlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", self.dimensions[0], ' '.join([self.dimensions[i] for i in range(1,len(self.dimensions))]))                
+        self.DefaultLegend('v', 1.02, 1.0)        
         self.updateRender()
         
     def createFigureWidget(self):
@@ -27,25 +28,41 @@ class GlueHistogramPlotly (GluePlotly):
         if self.only_subsets == False:        
             traces.append(trace)
         for sset in self.data.subsets:
-            s_val = sset[x_id]
-            if hasattr(sset[x_id], 'codes'):
-                s_val = sset[x_id].codes
-            hist, bin_edges2  = np.histogram(s_val.flatten(), range=(bin_edges[0], bin_edges[len(bin_edges)-1]),bins=(len(bin_edges)-1))
-            color = sset.style.color
-            trace = {
-                'type': "bar", 'name': sset.label,
-                'marker' : {'color': color},
-                'x': xedges,
-                'y': hist,
-            }
-            traces.append(trace)
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+            
+                s_val = sset[x_id]
+                if hasattr(sset[x_id], 'codes'):
+                    s_val = sset[x_id].codes
+                hist, bin_edges2  = np.histogram(s_val.flatten(), range=(bin_edges[0], bin_edges[len(bin_edges)-1]),bins=(len(bin_edges)-1))
+                color = sset.style.color
+                trace = {
+                    'type': "bar", 'name': sset.label,
+                    'marker' : {'color': color},
+                    'x': xedges,
+                    'y': hist,
+                }
+                traces.append(trace)
 
         layout = {
             'title' : self.options['title'].value,
             'margin' : {'l':50,'r':0,'b':50,'t':30 },
-            'xaxis': { 'autorange' : True, 'zeroline': True, 'title' : self.options['xaxis'].value, },
+            'xaxis': { 
+                'autorange' : True, 
+                'zeroline': True, 
+                'title' : self.options['xaxis'].value, 
+                'linecolor' : self.data.get_component(x_id).color,
+                'tickcolor' : self.data.get_component(x_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,
+            
+            },
             'yaxis': { 'autorange':True, 'zeroline': True, 'title' : self.options['yaxis'].value, },
-            'showlegend': True,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            },
+            'showlegend': self.margins['showlegend'].value,
             'barmode': 'overlay',
         }
         return FigureWidget({

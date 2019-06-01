@@ -1,6 +1,6 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
-from ipywidgets import IntText, Dropdown
+from ipywidgets import IntText, Dropdown, BoundedIntText
 from IPython.display import clear_output
 import numpy as np
 from sklearn.decomposition import PCA, IncrementalPCA, KernelPCA
@@ -15,12 +15,13 @@ class GluePcaPlotly (GluePlotly):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", 'I Component', 'J Component')
         self.DefaultLayoutScales("linear","linear");
-        self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
+        self.options['line_width'] = BoundedIntText(description = 'Lines width:', value = 1, min=0, max=10)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
-        self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
+        self.options['marker_size'] = BoundedIntText(description = 'Markers size:', value = 3, min=0, max=15)
         self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
         self.options['pca_method'] = Dropdown(description = 'PCA Method:', value = 'PCA', options = ['PCA','KPCA','IPCA'])
         self.options['pca_method'].observe(lambda v:self.updateRender(), names='value')
+        self.DefaultLegend('v', 1.02, 1.0);
         
         self.updateRender()
         
@@ -61,18 +62,19 @@ class GluePcaPlotly (GluePlotly):
             traces.append(trace)
             
         for sset in self.data.subsets:
-            sset_mask = sset.to_mask()
-            color = sset.style.color
-            trace = {
-                'type': "scattergl", 'mode': "markers", 'name': sset.label,
-                'marker': dict({
-                    'symbol':'circle', 'size': self.focused_size_marker, 'color': color,
-                    'line' : { 'width' : self.options['line_width'].value, 'color' : color}      
-                }),
-                'x': (x_val[sset_mask]).tolist(),
-                'y': (y_val[sset_mask]).tolist(),
-            }
-            traces.append(trace)  
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                sset_mask = sset.to_mask()
+                color = sset.style.color
+                trace = {
+                    'type': "scattergl", 'mode': "markers", 'name': sset.label,
+                    'marker': dict({
+                        'symbol':'circle', 'size': self.focused_size_marker, 'color': color,
+                        'line' : { 'width' : self.options['line_width'].value, 'color' : color}      
+                    }),
+                    'x': (x_val[sset_mask]).tolist(),
+                    'y': (y_val[sset_mask]).tolist(),
+                }
+                traces.append(trace)  
           
 
         layout = {
@@ -91,7 +93,12 @@ class GluePcaPlotly (GluePlotly):
                 'title' : self.options['yaxis'].value, 
                 'type' : self.options['yscale'].value
             },
-            'showlegend': True,
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            }               
         }
         
         return FigureWidget({

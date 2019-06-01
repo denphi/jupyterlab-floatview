@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import math
+import re
 
 class GlueNetworkPlotly (GluePlotly):
     default_size_marker = 5
@@ -19,9 +20,9 @@ class GlueNetworkPlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles("", "", "")
-        self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
+        self.options['line_width'] = BoundedIntText(description = 'Lines width:', value = 1, min=0, max=10)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
-        self.options['marker_size'] = IntText(description = 'Markers size:', value = self.default_size_marker)
+        self.options['marker_size'] = BoundedIntText(description = 'Markers size:', value = 3, min=0, max=15)
         self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
         self.options['layout_type'] = Dropdown(description = 'Layout type:', value = self.default_layout_type, options=self.layout_options)
         self.options['layout_type'].observe(lambda v:self.updateRender(), names='value')        
@@ -29,6 +30,7 @@ class GlueNetworkPlotly (GluePlotly):
         self.options['layout_k'].observe(lambda v:self.updateRender(), names='value')        
         self.options['layout_iter'] = BoundedIntText(description = 'Layout Iter:', value = 100, min=20,max=250)
         self.options['layout_iter'].observe(lambda v:self.updateRender(), names='value')        
+        self.DefaultLegend('v', 1.02, 1.0);
         
         self.updateRender()
         
@@ -77,6 +79,7 @@ class GlueNetworkPlotly (GluePlotly):
         max_degree = max(n_s)
         min_degree = min(n_s)
         n_s = [math.ceil((n-min_degree)/(max_degree-min_degree)*self.focused_size_marker*self.options['marker_size'].value) + self.options['marker_size'].value for n in n_s]
+        
         node_trace = {
             'type' : "scatter",
             'name': self.data.label + "_" + x_id,
@@ -87,9 +90,10 @@ class GlueNetworkPlotly (GluePlotly):
             'hoverinfo' :'text',
             'marker' : {
                 'size' : n_s,
+                'color' : self.data.get_component(x_id).color,
                 'line' : {
                     'width' : self.options['line_width'].value,
-                    'color' : "#AA3",                         
+                    'color' : self.data.get_component(x_id).color,
                 }
             },
             'showlegend' : True,
@@ -103,7 +107,14 @@ class GlueNetworkPlotly (GluePlotly):
             e_y[2*i] = pos[edge[0]][1]
             e_x[2*i+1] = pos[edge[1]][0]
             e_y[2*i+1] = pos[edge[1]][1]
-           
+
+        color = self.data.get_component(y_id).color        
+        color = re.match(r"rgb\((\d+),\s*(\d+),\s*(\d+)\)" , color)
+        color = (int(color[1]),int(color[2]),int(color[3]))
+        color = '#%02x%02x%02x' % color        
+        color = 'rgba'+ str(self.getDeltaColor(color, 0.2))
+
+        
         edge_trace = {
             'type' : "scatter",
             'name': self.data.label + "_" + y_id,
@@ -123,40 +134,41 @@ class GlueNetworkPlotly (GluePlotly):
             traces.append(edge_trace)
             
         for sset in self.data.subsets:
-            color = sset.style.color
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                color = sset.style.color
 
-            dfs = df[sset.to_mask()]
-            df_merge = dfs.merge(dfs, on=y_id)
-            dfs = pd.crosstab(df_merge[x_id + '_x'], df_merge[x_id + '_y'])
-            idx = dfs.columns.union(dfs.index)
-            dfs = dfs.reindex(index = idx, columns=idx, fill_value=0)
-            G = nx.convert_matrix.from_pandas_adjacency(dfs)
+                dfs = df[sset.to_mask()]
+                df_merge = dfs.merge(dfs, on=y_id)
+                dfs = pd.crosstab(df_merge[x_id + '_x'], df_merge[x_id + '_y'])
+                idx = dfs.columns.union(dfs.index)
+                dfs = dfs.reindex(index = idx, columns=idx, fill_value=0)
+                G = nx.convert_matrix.from_pandas_adjacency(dfs)
 
-            e_x = [0 for i in range(2*len(G.edges()))]
-            e_y = [0 for i in range(2*len(G.edges()))]
+                e_x = [0 for i in range(2*len(G.edges()))]
+                e_y = [0 for i in range(2*len(G.edges()))]
 
-            for i, edge in enumerate(G.edges()):
-                e_x[2*i] = pos[edge[0]][0]
-                e_y[2*i] = pos[edge[0]][1]
-                e_x[2*i+1] = pos[edge[1]][0]
-                e_y[2*i+1] = pos[edge[1]][1]
-               
-            trace = {
-                'type' : "scatter",           
-                'name': str(sset.label) + "_" + str(y_id),
-                'x' : e_x,
-                'y' : e_y,
-                'line' : {
-                    'width': self.options['line_width'].value,
-                    'color' : color
-                },
-                
-                'hoverinfo' : 'none',
-                'mode' : 'lines',
-                'showlegend' : True,
-            }            
+                for i, edge in enumerate(G.edges()):
+                    e_x[2*i] = pos[edge[0]][0]
+                    e_y[2*i] = pos[edge[0]][1]
+                    e_x[2*i+1] = pos[edge[1]][0]
+                    e_y[2*i+1] = pos[edge[1]][1]
+                   
+                trace = {
+                    'type' : "scatter",           
+                    'name': str(sset.label) + "_" + str(y_id),
+                    'x' : e_x,
+                    'y' : e_y,
+                    'line' : {
+                        'width': self.options['line_width'].value,
+                        'color' : color
+                    },
+                    
+                    'hoverinfo' : 'none',
+                    'mode' : 'lines',
+                    'showlegend' : True,
+                }            
 
-            traces.append(trace)  
+                traces.append(trace)  
                
         traces.append(node_trace)
         
@@ -184,7 +196,12 @@ class GlueNetworkPlotly (GluePlotly):
                 'showline' : True,
                 'showgrid' : False,
             },
-            'showlegend': True,
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            } 
         }
         return FigureWidget({
                 'data': traces,
@@ -204,9 +221,7 @@ class GlueNetworkPlotly (GluePlotly):
     def updateSelection(self, ids):
         #self.parent.printInDebug(ids)        
         self.plotly_fig.data[0].update(
-            selectedpoints=ids,
-            selected={'marker':{'color':'rgba(0, 0, 0, 0.4)', 'size': self.focused_size_marker}},
-            unselected={'marker':{'color':'rgba(0, 0, 0, 0.1)', 'size': self.default_size_marker}}
+            selectedpoints=ids
         )
 
     def setSubset(self,trace,points,selector): 

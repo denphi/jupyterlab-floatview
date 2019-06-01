@@ -1,7 +1,6 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
-from ipywidgets import Text
-from ipywidgets import IntText
+from ipywidgets import Text, IntText, BoundedIntText
 
 
 class GlueScatter3DPlotly (GluePlotly):
@@ -15,8 +14,9 @@ class GlueScatter3DPlotly (GluePlotly):
         self.options['yaxis'].observe(lambda v:self.UpdateLayout( {'scene.yaxis.title':v['new']} ), names='value')
         self.options['zaxis'] = Text( description = 'Zaxis Title:', value = self.dimensions[2] )
         self.options['zaxis'].observe(lambda v:self.UpdateLayout( {'scene.zaxis.title':v['new']} ), names='value')
-        self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
-        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')              
+        self.options['marker_size'] = BoundedIntText(description = 'Markers size:', value = 3, min=0, max=15)
+        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
+        self.DefaultLegend('v', 1.02, 1.0);
         
         self.updateRender()
         
@@ -36,26 +36,53 @@ class GlueScatter3DPlotly (GluePlotly):
         if self.only_subsets == False:
             traces.append(trace)
         for sset in self.data.subsets:
-            color = sset.style.color
-            color = 'rgba'+str(self.getDeltaColor(color, .8))
-            trace = {
-                'type': "scatter3d", 'mode': "markers", 'name': sset.label,
-                'marker': dict({
-                    'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
-                }),
-                'x': sset[x_id].flatten(),
-                'y': sset[y_id].flatten(),
-                'z': sset[z_id].flatten(),
-            }
-            traces.append(trace)
+            if hasattr(sset,"disabled") == False or sset.disabled == False:
+                color = sset.style.color
+                color = 'rgba'+str(self.getDeltaColor(color, .8))
+                trace = {
+                    'type': "scatter3d", 'mode': "markers", 'name': sset.label,
+                    'marker': dict({
+                        'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
+                    }),
+                    'x': sset[x_id].flatten(),
+                    'y': sset[y_id].flatten(),
+                    'z': sset[z_id].flatten(),
+                }
+                traces.append(trace)
 
         layout = {            
             'margin' : {'l':0,'r':0,'b':0,'t':30 },            
             'scene' : {
-                'xaxis': { 'title' : self.options['xaxis'].value },
-                'yaxis': { 'title' : self.options['yaxis'].value },
-                'zaxis': { 'title' : self.options['zaxis'].value }
-            }
+                'xaxis': { 
+                    'title' : self.options['xaxis'].value,
+                    'linecolor' : self.data.get_component(x_id).color,
+                    'tickcolor' : self.data.get_component(x_id).color,
+                    'ticklen' : 4,
+                    'linewidth' : 4,                
+                    
+                },
+                'yaxis': { 
+                    'title' : self.options['yaxis'].value,
+                    'linecolor' : self.data.get_component(y_id).color,
+                    'tickcolor' : self.data.get_component(y_id).color,
+                    'ticklen' : 4,
+                    'linewidth' : 4,                
+                    
+                },
+                'zaxis': { 
+                    'title' : self.options['zaxis'].value,
+                    'linecolor' : self.data.get_component(z_id).color,
+                    'tickcolor' : self.data.get_component(z_id).color,
+                    'ticklen' : 4,
+                    'linewidth' : 4,                                    
+                }
+            },
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            }            
         }
         return FigureWidget({
                 'data': traces,

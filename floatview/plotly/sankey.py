@@ -1,34 +1,30 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
-from ipywidgets import IntText
+from ipywidgets import IntText, Dropdown, FloatSlider, Label, BoundedIntText
 import plotly.graph_objs as go
 import numpy as np
 from collections import deque
+import colorlover as cl
   
-class GlueParallelSankeyPlotly (GluePlotly):
+class GlueSankeyPlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
+    default_color = 'Dataset'
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
-        self.DefaultLayoutTitles("", "", "")        
+        self.DefaultLayoutTitles('', '', '')        
         self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
         self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')
+        cl_options = list(cl.scales['8']['qual'].keys())
+        cl_options.append(GlueSankeyPlotly.default_color)
+        self.options['colorscale'] = Dropdown(description = 'Color Palette:', value = GlueSankeyPlotly.default_color, options = cl_options)
+        self.options['colorscale'].observe(lambda v:self.updateRender(), names='value')        
+        self.DefaultLegend('h', 0.01, -0.05);
         self.updateRender()
         
     def createFigureWidget(self):
         dimensions = self.dimensions
         data_lines = [] 
-        i=0
-        if self.only_subsets == False: 
-            colors = [i for r in range(self.data.size)] 
-            colorscale = [[0,'#EEEEEE']]
-        else:
-            colors = []
-            colorscale = []
-            i=-1
-        #for sset in self.data.subsets: #self.data.subsets
-        #
-
         sources = []
         targets = []
         nodes = [{} for dim in dimensions]
@@ -38,22 +34,14 @@ class GlueParallelSankeyPlotly (GluePlotly):
         colors = []
         self.masks = []
         nodes_id = []
-        color_set = [
-            'rgb(255,255,255)',
-            'rgb(49,54,149)',
-            'rgb(165,0,38)',
-            'rgb(69,117,180)',
-            'rgb(215,48,39)',
-            'rgb(116,173,209)',
-            'rgb(244,109,67)',
-            'rgb(171,217,233)',
-            'rgb(253,174,97)',
-            'rgb(224,243,248)',
-            'rgb(254,224,144)',
-        ]
-        c_diff = len(dimensions) - len(color_set)
-        if (c_diff >= 0):
-            color_set.extend(['rgb(254,224,144)' for c in range(c_diff+1)])
+        if self.options['colorscale'].value == GlueSankeyPlotly.default_color:
+            color_set = [self.data.get_component(dim).color for dim in dimensions]
+        else:
+            color_set = cl.scales['8']['qual'][self.options['colorscale'].value]
+            if (len(self.dimensions) > 8):
+                color_set = cl.interp( color_set, len(dimensions) )
+            color_set = cl.to_rgb(color_set)
+        
         for i, dimension in enumerate(dimensions):
             dvalues = np.unique(self.data[dimension].flatten())
         
@@ -70,7 +58,7 @@ class GlueParallelSankeyPlotly (GluePlotly):
                 
                 nodes[i]['values'] = []
                 for edge in range(len(bin_edges)-1):
-                    nodes[i]['values'].append( "{:.1f}".format(bin_edges[edge]) + " - " + "{:.1f}".format(bin_edges[edge+1]))
+                    nodes[i]['values'].append( '{:.1f}'.format(bin_edges[edge]) + ' - ' + '{:.1f}'.format(bin_edges[edge+1]))
                 nodes[i]['local_nodes'] = [len(nodes_id)+cnt for cnt in range(len(nodes[i]['values']))]
                 nodes[i]['masks'] = []
                 for edge in range(len(bin_edges)-1):
@@ -81,27 +69,43 @@ class GlueParallelSankeyPlotly (GluePlotly):
                         
             nodes_id.extend(nodes[i]['local_nodes'])                
             labels.extend(nodes[i]['values'])
-            colors.extend([color_set[i+1] for val in nodes[i]['values']])
+            colors.extend([color_set[i] for val in nodes[i]['values']])
             self.masks.extend(nodes[i]['masks'])
-                
+        link_colors = []
         for i in range(len(dimensions)-1):
             for j in range(len(nodes[i]['local_nodes'])):
                 for k in range(len(nodes[i+1]['local_nodes'])):
                     total = np.count_nonzero((nodes[i]['masks'][j] & nodes[i+1]['masks'][k]))
                     if total > 0:
-                        sources.append(nodes[i]['local_nodes'][j])
-                        targets.append(nodes[i+1]['local_nodes'][k])
-                        values.append(total)
+                        mask = nodes[i]['masks'][j] & nodes[i+1]['masks'][k]                
+                        for sset in self.data.subsets:
+                            if hasattr(sset,"disabled") == False or sset.disabled == False:                                    
+                                sset_mask = sset.to_mask()
+                                color = sset.style.color
+                                settotal = np.count_nonzero(mask & sset_mask)
+                                mask = mask & ~sset_mask
+                                sources.append(nodes[i]['local_nodes'][j])
+                                targets.append(nodes[i+1]['local_nodes'][k])
+                                values.append(settotal)
+                                link_colors.append(color)
+                                total = total - settotal
+                        if self.only_subsets == False:
+                            sources.append(nodes[i]['local_nodes'][j])
+                            targets.append(nodes[i+1]['local_nodes'][k])
+                            values.append(total)
+                            link_colors.append('rgba(238, 238, 238, 0.6)')                    
+                        
                 
         traces = []
         
         sankey = {
             'type' : 'sankey',
+            #'arrangement' : 'perpendicular',
             'node' : {
-              'pad' : 15,
-              'thickness' : 20,
+              'pad' : 8,
+              'thickness' : 15,
               'line' : {
-                'color' : "black",
+                'color' : 'black',
                 'width' : 0.5
               },
               'label' : labels,
@@ -111,7 +115,12 @@ class GlueParallelSankeyPlotly (GluePlotly):
               'source' : sources,
               'target' : targets,
               'value' : values,
-              "hovertemplate": "%{label}<br><b>Source: %{source.label}<br>Target: %{target.label}<br> %{flow.value}</b>"             
+              'hovertemplate': '%{label}<br><b>Source: %{source.label}<br>Target: %{target.label}<br> %{flow.value}</b>',
+              'color' : link_colors,
+              'line' : { 
+                'color' : 'lightgrey',
+                'width' : 0.5
+              }
             },
             #'domain':{
             #    'x': [0, 0.9],
@@ -139,25 +148,29 @@ class GlueParallelSankeyPlotly (GluePlotly):
                 'showticklabels':False,
                 'zeroline':False                
             },
+            'showlegend': self.margins['showlegend'].value,            
             'legend' : {
-                'orientation' : 'h',
-                'x' : 0.3,
-                'y' : 1.0
-            }
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            }, 
+            'font' : {
+                'size' : 10,
+            },
         }
         
 
         for i in range(len(self.dimensions)):
             dimension = self.dimensions[i]
             trace = {
-                'type': "scatter",
+                'type': 'scatter',
                 'name' : dimension, 
                 'textposition' : 'middle right',
                 'x' : [-1000],
                 'y' : [i],
                 'mode' : 'markers',
                 'marker': {
-                    'color' : color_set[i+1],
+                    'color' : color_set[i],
                     'size' : 20,
                     'line': {
                         'width': 0,
@@ -167,7 +180,47 @@ class GlueParallelSankeyPlotly (GluePlotly):
             }
             traces.append(trace)
 
-            
+        if self.only_subsets == False:
+            trace = {
+                'type': "scatter",
+                'name' : self.data.label, 
+                'textposition' : 'middle right',
+                'x' : [-1000],
+                'y' : [i],
+                'mode' : 'markers',
+                'marker': {
+                    'color' : "#EEEEEE",
+                    'size' : 20,
+                    'line': {
+                        'width': 1,
+                        'color' : 'light grey'
+                    },
+                    'symbol' : 'square'
+                }
+            }
+            traces.append(trace)
+
+        for sset in self.data.subsets:
+            if hasattr(sset,"disabled") == False or sset.disabled == False:                    
+                color = sset.style.color
+                trace = {
+                    'type': "scatter",
+                    'name' : sset.label, 
+                    'textposition' : 'middle right',
+                    'x' : [-1000],
+                    'y' : [i],
+                    'mode' : 'markers',
+                    'marker': {
+                        'color' : color,
+                        'size' : 20,
+                        'line': {
+                            'width': 1,
+                            'color' : 'light grey'
+                        },
+                        'symbol' : 'square'
+                    }
+                }
+                traces.append(trace)
         data = traces
         FigureWidget(data = data, layout = layout)
         return FigureWidget(data = data, layout = layout)
@@ -212,28 +265,24 @@ class GlueParallelSankeyPlotly (GluePlotly):
 class GlueSankeytreePlotly (GluePlotly):
     default_size_marker = 3
     focused_size_marker = 4
-    pca = None
-    options = {}
+    default_color = 'Dataset'
     
     def __init__(self, data, dimensions, **kwargs):
         GluePlotly.__init__(self, data, dimensions, **kwargs)
         self.DefaultLayoutTitles('', '', '')
         self.options['grouping_limit'] = IntText(description = 'Group limiy', value = 12)
-        self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')        
+        self.options['grouping_limit'].observe(lambda v:self.updateRender(), names='value')
+        cl_options = list(cl.scales['8']['qual'].keys())
+        cl_options.append(GlueSankeytreePlotly.default_color)
+        self.options['colorscale'] = Dropdown(description = 'Color Palette:', value = GlueSankeytreePlotly.default_color, options = cl_options)
+        self.options['colorscale'].observe(lambda v:self.updateRender(), names='value')
+        self.DefaultLegend('v', 1.02, 1.0);
+        
         self.updateRender()
         
     def createFigureWidget(self):
         data_lines = []
-        traces = []
-        i=0
-        if self.only_subsets == False:
-            colors = [i for r in range(self.data.size)]
-            colorscale = [[0,'#EEEEEE']]
-        else:
-            colors = []
-            colorscale = []
-            i=-1
-
+        traces = []        
         sources = []
         targets = []
         values = []
@@ -244,24 +293,18 @@ class GlueSankeytreePlotly (GluePlotly):
         df = self.data.to_dataframe()
         ids = 0
         queue = deque()
-        color_set = [
-            'rgb(255,255,255)',
-            'rgb(49,54,149)',
-            'rgb(165,0,38)',
-            'rgb(69,117,180)',
-            'rgb(215,48,39)',
-            'rgb(116,173,209)',
-            'rgb(244,109,67)',
-            'rgb(171,217,233)',
-            'rgb(253,174,97)',
-            'rgb(224,243,248)',
-            'rgb(254,224,144)',
-        ]
-        c_diff = len(self.dimensions) - len(color_set)
-        if (c_diff >= 0):
-            color_set.extend(['rgb(254,224,144)' for c in range(c_diff+1)])
+        if self.options['colorscale'].value == GlueSankeytreePlotly.default_color:
+            color_set = [self.data.get_component(dim).color for dim in self.dimensions]
+        else:
+            color_set = cl.scales['8']['qual'][self.options['colorscale'].value]
+            if (len(self.dimensions) > 8):
+                color_set = cl.interp( color_set, len(self.dimensions) )
+            color_set = cl.to_rgb(color_set)
+
+           
+
         
-        queue.append({'id':ids,'dimension':0, 'label':"Data", 'mask':[True for i in range(self.data.size)], 'parent':''})
+        queue.append({'id':ids,'dimension':0, 'label':'Data', 'mask':[True for i in range(self.data.size)], 'parent':''})
         while len(queue) > 0:
             toprocess = queue.popleft()
             mask = toprocess['mask']
@@ -274,7 +317,7 @@ class GlueSankeytreePlotly (GluePlotly):
                 targets.append(id)
                 values.append(value)
                 parents.append(toprocess['parent'])
-                colors.append(color_set[toprocess['dimension']])
+                colors.append(color_set[toprocess['dimension']-1])
                 self.masks.append(mask)
                 data = df[mask]
                 if toprocess['dimension'] < len(self.dimensions):
@@ -299,7 +342,7 @@ class GlueSankeytreePlotly (GluePlotly):
                             hist, bin_edges  = np.histogram(self.data[dimension].flatten(), bins=self.options['grouping_limit'].value)
                         for edge in range(len(bin_edges)-1):
                             ids += 1
-                            label = "{:.1f}".format(bin_edges[edge]) + " - " + "{:.1f}".format(bin_edges[edge+1])
+                            label = '{:.1f}'.format(bin_edges[edge]) + ' - ' + '{:.1f}'.format(bin_edges[edge+1])
                             process = {'id':ids,'dimension':toprocess['dimension']+1, 'label':label, 'parent':toprocess['id']}
                             if edge == 0:
                                 process['mask'] = (mask & ((self.data[dimension] >= bin_edges[edge]) & (self.data[dimension] <= bin_edges[edge+1])))
@@ -313,7 +356,7 @@ class GlueSankeytreePlotly (GluePlotly):
               'pad' : 15,
               'thickness' : 20,
               'line' : {
-                'color' : "black",
+                'color' : 'black',
                 'width' : 0.5
               },
               'label' : labels[1:],
@@ -323,7 +366,7 @@ class GlueSankeytreePlotly (GluePlotly):
               'source' : [s-1 for s in sources[1:]],
               'target' : [t-1 for t in targets[1:]],
               'value' : values[1:],
-              "hovertemplate": "%{label}<br><b>Source: %{source.label}<br>Target: %{target.label}<br> %{flow.value}</b>"             
+              'hovertemplate': '%{label}<br><b>Source: %{source.label}<br>Target: %{target.label}<br> %{flow.value}</b>'             
             },       
         }
         traces.append(trace)
@@ -352,20 +395,25 @@ class GlueSankeytreePlotly (GluePlotly):
                 'showline':False,
                 'showticklabels':False,
                 'zeroline':False                
-            },            
+            },   
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            }
         }
         
         for i in range(len(self.dimensions)):
             dimension = self.dimensions[i]
             trace = {
-                'type': "scatter",
+                'type': 'scatter',
                 'name' : dimension, 
                 'textposition' : 'middle right',
                 'x' : [-1000],
                 'y' : [i],
                 'mode' : 'markers',
                 'marker': {
-                    'color' : color_set[i+1],
+                    'color' : color_set[i],
                     'size' : 20,
                     'line': {
                         'width': 0,

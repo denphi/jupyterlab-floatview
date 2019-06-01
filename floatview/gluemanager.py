@@ -1,23 +1,24 @@
 from ipywidgets import widgets
 from .floatview import Floatview
-from .plotly.scatter import GlueScatterPlotly
+from .plotly.scatter import GlueScatterPlotly, GlueScatterMatrixPlotly
 from .plotly.network import GlueNetworkPlotly
 from .plotly.scatter3d import GlueScatter3DPlotly
 from .plotly.contour import GlueContourPlotly
 from .plotly.table import GlueTablePlotly
 from .plotly.histogram import GlueHistogramPlotly
-from .plotly.parallelcoordinates import GlueParallelCoordinatesPlotly
+from .plotly.parallelcoordinates import GlueParallelCoordinatesPlotly, GlueParallelCategoriesPlotly
 from .plotly.errorbar import GlueErrorBarPlotly
 from .plotly.polyfit import GluePolyFitPlotly
 from .plotly.line import GlueLinePlotly
 from .plotly.image import GlueImagePlotly
-from .plotly.sankey import GlueParallelSankeyPlotly
-from .plotly.sankey import GlueSankeytreePlotly
+from .plotly.sankey import GlueSankeyPlotly, GlueSankeytreePlotly
 from .plotly.pca import GluePcaPlotly
 from .plotly.corrcoef import GlueCorrelationsPlotly
 from .plotly.sunburst import GlueSunburstPlotly
 from glue import core as gcore
 from glue.core.data import Data
+import colorlover as cl
+import re
 
 import itertools
 
@@ -36,16 +37,16 @@ class GlueManagerFactory:
         self.registerGluePlot("histogram", GlueHistogramPlotly, 1)                             
         self.registerGluePlot("composed_errorbar", GlueErrorBarPlotly)                
         self.registerGluePlot("composed_scatter", GlueScatterPlotly)                            
-        self.registerGluePlot("composed_errorbar", GlueScatterPlotly)                                
         self.registerGluePlot("composed_lines", GlueLinePlotly)
         self.registerGluePlot("image", GlueImagePlotly, 3)
-        self.registerGluePlot("sankey", GlueParallelSankeyPlotly)
+        self.registerGluePlot("sankey", GlueSankeyPlotly)
         self.registerGluePlot("network", GlueNetworkPlotly, 2)
         self.registerGluePlot("pca", GluePcaPlotly)
         self.registerGluePlot("corrcoef", GlueCorrelationsPlotly)
         self.registerGluePlot("sunburst", GlueSunburstPlotly)
         self.registerGluePlot("sankeytree", GlueSankeytreePlotly)
-        GlueSankeytreePlotly
+        self.registerGluePlot("scattermatrix", GlueScatterMatrixPlotly)  
+        self.registerGluePlot("parallelscat", GlueParallelCategoriesPlotly)       
     
     def listPlots(self):    
         return list(self.plot_list.keys());
@@ -92,6 +93,30 @@ class GlueManager:
         self.views = {}
         self.active_views = {}
         self.factory = GlueManagerFactory()
+        self.colorset = ('12', 'qual', 'Paired')
+        self.setColorSet(*self.colorset)
+
+    def setColorSet(self, dimensions='12', type='qual', dataset='Paired'):
+        if dimensions in cl.scales:
+            if type in cl.scales[dimensions]:
+                if dataset in cl.scales[dimensions][type]:                    
+                    color_set = cl.scales[dimensions][type][dataset]
+                    self.colorset = (dimensions, type, dataset)
+                    if (len(self.data.components) > len(color_set)):
+                        color_set = cl.interp( color_set, len(self.data.components) )
+                    color_set = cl.to_rgb(color_set)
+                    for i, component in enumerate(self.data.components):
+                        self.data.get_component(component).color = color_set[i]
+                    return True
+        return False
+
+    def listColorByType(self, type):
+        listcolorset = []
+        for dimension in cl.scales:
+            if type in cl.scales[dimension]:
+                for colorset in cl.scales[dimension][type]:
+                    listcolorset.append((dimension, colorset))
+        return listcolorset
         
     def setNewData(self, data):
         self.data = data
@@ -120,7 +145,9 @@ class GlueManager:
         else:
             data = Data(label=self.data.label)
             for c in components:
-                data.add_component(self.data[c, self.selection], label=c)        
+                data.add_component(self.data[c, self.selection], label=c)   
+                data.get_component(c).color = self.data.get_component(c).color
+
             if (data.size > 0):
                 gp = self.factory.createGluePlot(type, data, components, title, **kwargs)
 
@@ -177,6 +204,17 @@ class GlueManager:
         if isinstance(self.parent, GlueManagerWidget):
             self.parent.updateSubsets()                
 
+    def disableComponentFromSelection(self, labels, values):
+        sset_changed = []
+        for sset in self.data.subsets:
+            for i, label in enumerate(labels):
+                if sset.label == label:
+                    if hasattr(sset,"disabled") and sset.disabled == values[i]:
+                        pass
+                    else:
+                        setattr(sset,'disabled',values[i])
+                        sset_changed.append(sset)
+        return sset_changed
 
 class GlueManagerWidget(widgets.Tab):
     gluemanager = None
@@ -185,6 +223,8 @@ class GlueManagerWidget(widgets.Tab):
     plots = None
     subsetsui = None
     modal = False
+    r = r"rgb\((\d+),\s*(\d+),\s*(\d+)\)"
+
     def __init__(self, gluemanager, modal=False, label=None, display_console=True):
         widgets.Tab.__init__(self);
         if isinstance(gluemanager, GlueManager):
@@ -201,14 +241,15 @@ class GlueManagerWidget(widgets.Tab):
         self.subsets = self.createSubsetsPanel()
         self.plots = self.createPlotsPanel()
         self.history = self.createHistoryPanel()
+        self.options = self.createOptions()
         self.modal = modal
-        self.debug = self.gluemanager.debug
-        
-        self.children = [self.plots, self.subsets, self.history, self.debug]
+        self.debug = self.gluemanager.debug        
+        self.children = [
+            widgets.VBox([self.options, self.plots]), 
+            widgets.VBox([self.subsets])
+        ]        
         self.set_title(0, 'Plots')
         self.set_title(1, 'Subsets')
-        self.set_title(2, 'History')
-        self.set_title(3, 'Debug')
         if self.display_console:
             if (self.modal):
                 modal_window = Floatview(title = "GMW("+str(id(self))+")", mode = "split-top")              
@@ -216,66 +257,69 @@ class GlueManagerWidget(widgets.Tab):
                     display(self)
             else:
                 display(self)
+                display(self.debug)
 
+    def setColorSet(self, dimensions='12', type='qual', dataset='Paired'):         
+        if (self.gluemanager.setColorSet(dimensions, type, dataset)):
+                       
+            for cont in self.dimensions.children:
+                vc1 = cont.children[1]
+                vc2 = cont.children[0]                
+                color = self.gluemanager.data.get_component(vc2.description).color
+                color = re.match(GlueManagerWidget.r, color)
+                color = (int(color[1]),int(color[2]),int(color[3]))
+                color = '#%02x%02x%02x' % color
+                vc2.style.button_color = color
+            self.gluemanager.updateTraces()
+    
+    def listColorSets(self):
+        type='qual'
+        return self.gluemanager.listColorByType(type)
+
+    def createOptions(self):
+        colorsets = self.listColorSets()
+        list_cs = []
+        for k in colorsets:
+            list_cs.append(k[0] + "-qual-" + k[1])
+        
+        dd = widgets.Dropdown(
+            options=list_cs,
+            value="-".join(list(self.gluemanager.colorset)),
+            disabled=False,
+            description = "Colorset",
+            layout=widgets.Layout(width = 'auto')
+        )
+        dd.observe(lambda change, this=self : this.setColorSet(*(change['new'].split('-'))), "value")
+        vb1 = widgets.VBox([dd], layout=widgets.Layout(width='auto'))
+        return vb1 
+    
     def createSubsetsPanel(self):
     
-        self.subsetsui = widgets.SelectMultiple(
-            options=[sset.label for sset in self.gluemanager.data.subsets],
-            value=[],
-            rows=4,
-            disabled=False
-        )
-        self.subsetsui.layout = widgets.Layout(width='99%')
-
-        bt = widgets.Button(
-            description='Create new Subset.',
-            disabled=False,
-            button_style='', # 'success', 'info', 'warning', 'danger' or ''
-            tooltip='createa new subset from current selection',
-        )
+        self.subsetsui = widgets.HBox([], layout=widgets.Layout(display='flex', flex_flow='wrap'))
+        self.updateSubsets()
         
-        bt.layout = widgets.Layout(width='99%')
+        cr = widgets.Button(
+            description='Create subset from selection',
+            disabled=False,
+            button_style='',
+            tooltip='create a new subset from current selection',
+            layout=widgets.Layout(width='100%')
+        )
 
         tx = widgets.Text(
             value='',
-            placeholder='new subset name',
-            disabled=False
-        )
-        tx.layout = widgets.Layout(width='99%')
-
-        bt.on_click(lambda e : GlueManagerWidget.createSubsetFromSelection(self, tx))
-
-        dl = widgets.Button(
-            description='remove selected Subsets',
-            disabled=False,
-            button_style='danger',
-            tooltip='Removes active subsets from the data workspace',
-        )
-               
-        dl.layout = widgets.Layout(width='99%')
-        dl.on_click(lambda e : GlueManagerWidget.deleteSubsetFromSelection(self))
-
-
-        sl = widgets.Button(
-            description='Hide selected subsets',
-            disabled=False,
-            button_style='warning',
-            tooltip='',
+            placeholder='New subset name',
+            disabled=False, 
+            layout = widgets.Layout(width='auto')
         )
         
+        cr.on_click(lambda e : GlueManagerWidget.createSubsetFromSelection(self, tx))
         
-        sl.layout = widgets.Layout(width='99%')
+        hb1 = widgets.HBox([cr], layout=widgets.Layout(width='auto'))
+        vb1 = widgets.VBox([self.subsetsui,tx,hb1], layout=widgets.Layout(width='auto'))
 
-        vb = widgets.VBox([dl, sl])
-
-        vb2 = widgets.VBox([tx, bt])
-
-        hb1 = widgets.HBox([vb2,self.subsetsui,vb])
-
-
-        vb3 = widgets.VBox([hb1])
         
-        return vb3
+        return vb1
 
     def createHistoryPanel(self):
 
@@ -321,18 +365,34 @@ class GlueManagerWidget(widgets.Tab):
         for k in components:
             if k not in world_component_ids: #k not in pixel_component_ids and
                 kt = str(k)
-                vv = widgets.ToggleButton(
-                    value=False, tooltip=kt, description=kt
+                color = self.gluemanager.data.get_component(k).color
+                color = re.match(GlueManagerWidget.r, color)
+                color = (int(color[1]),int(color[2]),int(color[3]))
+                color = '#%02x%02x%02x' % color
+                vc1 = widgets.Checkbox(
+                    value=False, 
+                    tooltip = kt, 
+                    indent = False,
+                    layout = widgets.Layout(width='40px')
                 )
+                vc2 = widgets.Button(
+                    description = kt,
+                    style = widgets.ButtonStyle(button_color=color),
+                    disabled = False,
+                    layout = widgets.Layout(min_width='min-content', max_width='min-content')
+                )
+                vc2.on_click(lambda event,v=vc1 : setattr(v,'value', not v.value))
+                vv = widgets.HBox([vc2,vc1], layout=widgets.Layout(width='auto'))
                 v.append(vv)
 
-        tb = widgets.HBox(v)
+        self.dimensions = widgets.HBox(v, layout=widgets.Layout(display='flex', flex_flow='wrap'))
 
         cr = widgets.Button(
             description='Create new visualization',
             disabled=False,
             button_style='',
             tooltip='',
+            layout=widgets.Layout(width='100%')
         )
 
         views = self.gluemanager.listPlots()
@@ -341,46 +401,107 @@ class GlueManagerWidget(widgets.Tab):
             options=views,
             value=views[0],
             disabled=False,
+            layout = widgets.Layout(width='auto')
         )
 
         ss = widgets.Checkbox(
             value=False,
             description='Only subsets',
-            disabled=False
+            disabled=False,
+            indent = False,
         )
 
         tx = widgets.Text(
             value='',
             placeholder='New_Visualization',
-            disabled=False
+            disabled=False, 
+            layout = widgets.Layout(width='auto')
         )
         
         
-        hb1 = widgets.HBox([dd,tx,ss,cr])
-        vb1 = widgets.VBox([tb,hb1])
+        hb1 = widgets.HBox([ss,cr], layout=widgets.Layout(width='auto'))
+        vb1 = widgets.VBox([self.dimensions,dd,tx,hb1], layout=widgets.Layout(width='auto'))
         
         from IPython.display import display
-        cr.on_click(lambda e : GlueManagerWidget.createNewView(self,e, dd, tb.children, tx, ss))
+        cr.on_click(lambda e, b=self.dimensions, this=self : this.createNewView(e, dd, b, tx, ss))
 
-        return vb1    
+        return vb1 
+        
     def _repr_html_(self):
         return widgets.Tab._repr_html_(self)
 
     def createNewView(self,e,dd, tb, tx, ss):
         list_comp = []
-        for vv in tb:
-            if vv.value == True:
-                list_comp.append(vv.description)                        
-        self.gluemanager.newView(dd.value, list_comp, tx.value, only_subsets=ss.value)
+        for cont in tb.children:
+            if (len(cont.children) == 2):
+                vc1 = cont.children[1]
+                vc2 = cont.children[0]
+                if vc1.value == True:
+                    list_comp.append(vc2.description) 
+        gp = self.gluemanager.newView(dd.value, list_comp, tx.value, only_subsets=ss.value)
+        if self.modal is False:
+            with self.debug:
+                display(gp.window)
+            
             
     def createSubsetFromSelection(self, tx):        
         self.gluemanager.createSubsetFromSelection(tx.value)
 
-    def deleteSubsetFromSelection(self):
-        self.gluemanager.deleteSubsetFromSelection(self.subsetsui.value)
+    def deleteSubsetFromSelection(self, labels):
+        self.gluemanager.deleteSubsetFromSelection(labels)
+
+    def disableComponentFromSelection(self, label, ui=None):
+        disable = [True]
+        if ui is not None:
+            disable = [ui.icon == "eye"]
+        ssets = self.gluemanager.disableComponentFromSelection([label], disable)
+        if ui is not None:
+            for sset in ssets:
+                if sset.label == label:
+                    icon = 'eye'
+                    if hasattr(sset, 'disabled') and sset.disabled is True:
+                        icon = 'eye-slash'
+                    ui.icon = icon
+        elif len(ssets) > 0:
+            self.updateSubsets()
+        if len(ssets) > 0:
+            self.gluemanager.updateTraces()
         
+            
     def updateSubsets(self):
-        self.subsetsui.options = [sset.label for sset in self.gluemanager.data.subsets]
+        v = []
+        for sset in self.gluemanager.data.subsets:
+            kt = sset.label
+            color = sset.style.color
+            vc2 = widgets.Button(
+                description = kt,
+                style = widgets.ButtonStyle(button_color=color),
+                disabled = False,
+                layout = widgets.Layout(min_width='min-content', max_width='min-content')
+            )
+            vc3 = widgets.Button(
+                description = "",
+                style = widgets.ButtonStyle(button_color=color),                
+                icon = 'remove',
+                disabled = False,
+                layout = widgets.Layout(width='40px')
+            )
+            vc3.on_click(lambda event, this=self, value=[kt]: this.deleteSubsetFromSelection(value) )
+            icon = 'eye'
+            if hasattr(sset,'disabled') and sset.disabled is True:
+                icon = 'eye-slash'
+            vc1 = widgets.Button(
+                description = "",
+                style = widgets.ButtonStyle(button_color=color),                
+                icon = icon,
+                disabled = False,
+                layout = widgets.Layout(width='40px'),
+                value=True
+            )
+            vc1.on_click(lambda event, this=self, value=kt, vc=vc1: this.disableComponentFromSelection(value, vc) )
+            vv = widgets.HBox([vc1,vc2,vc3], layout=widgets.Layout(width='auto'))
+            v.append(vv)
+        self.subsetsui.children = v
 
     def updateHistory(self):        
         self.activeui.options = [s.window.title for s in self.gluemanager.active_views.values() if isinstance(s.window, Floatview)]

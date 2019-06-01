@@ -152,15 +152,12 @@ class DataExplorer(VBox):
                     columns.append(w.description)
             df = pd.read_csv(self.ui["Database"]["list"].value, low_memory=False, usecols=columns)
             self.ui["Filters"]["container"].children = [] 
-            print("asdasd", reload)
             self.ui["Filters"]["grid"] = qgrid.show_grid(df, show_toolbar=False, grid_options={'editable': False})
-            print ("1")
             self.ui["Filters"]["container"].children = [
                 self.ui["Filters"]["button_container"], 
                 self.ui["Filters"]["grid"], 
                 self.ui["Filters"]["button_container"]
             ]
-            print ("2")
 
     def moveOption(self, pos, up, d, l):
         children = list(d.children)
@@ -195,10 +192,10 @@ class DataExplorer(VBox):
                     main_dimensions.append(Checkbox(value=False, description=k, layout=Layout(width="auto")))
                 secondary_dimensions.append(Checkbox(value=True, description=k, layout=Layout(width="auto")))
             self.ui["Exploration"]["main_dimensions"] = main_dimensions
-            self.ui["Exploration"]["main_plot"] = Dropdown(description="Visualization", options=["sankey", "pca", "sankeytree", "sunburst"], value="sankey")
+            self.ui["Exploration"]["main_plot"] = Dropdown(description="Visualization", options=["sankey", "pca", "sankeytree", "sunburst", "parallelscat", "scattermatrix"], value="sankey")
             self.ui["Exploration"]["secondary_dimensions"] = secondary_dimensions
-            self.ui["Exploration"]["secondary_plot1"] = Dropdown(description="Visualization", options=["table", "corrcoef", "sankey", "pca", "sankeytree", "sunburst"], value="corrcoef")
-            self.ui["Exploration"]["secondary_plot2"] = Dropdown(description="Visualization", options=["table", "corrcoef", "sankey", "pca", "sankeytree", "sunburst"], value="table")
+            self.ui["Exploration"]["secondary_plot1"] = Dropdown(description="Visualization", options=["table", "corrcoef", "sankey", "pca", "sankeytree", "sunburst", "parallelscat", "parallels", "scattermatrix"], value="corrcoef")
+            self.ui["Exploration"]["secondary_plot2"] = Dropdown(description="Visualization", options=["table", "corrcoef", "sankey", "pca", "sankeytree", "sunburst", "parallelscat", "parallels", "scattermatrix"], value="table")
             vb1 = VBox(main_dimensions, layout = Layout(width="100%", padding="10px"))
 
 

@@ -3,7 +3,7 @@ from glue import core as gcore
 from floatview import Floatview
 from plotly.offline import init_notebook_mode
 from matplotlib import colors
-from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox, Accordion
+from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox, Accordion, FloatSlider, Label, Checkbox
 
 
 class GluePlotly():
@@ -76,10 +76,9 @@ class GluePlotly():
     def UpdateTraces(self, options):
         for key, value in options.items():
             for i in range(len(self.plotly_fig.data)):
-                try:
+                with self.debug:
                     self.plotly_fig.data[i][key] = value
-                except:
-                    pass
+
             
     def DefaultLayoutTitles(self,title,xaxis,yaxis):
         self.options['title'] = Text( description = 'Title:', value = title )
@@ -104,6 +103,17 @@ class GluePlotly():
         self.margins['bottom'].observe(lambda v:self.UpdateLayout( {'margin.b':v['new']} ), names='value')
         self.margins['top'] = IntText( description = 'Top:', value = t )
         self.margins['top'].observe(lambda v:self.UpdateLayout( {'margin.t':v['new']} ), names='value')
+        
+    def DefaultLegend(self, orientation, xpos, ypos):
+        self.margins['legend'] = Label( value = 'Legend' )
+        self.margins['showlegend'] = Checkbox(value = True, description="visible:")
+        self.margins['showlegend'].observe(lambda v:self.UpdateLayout( {'showlegend':v['new']} ), names='value')
+        self.margins['legend_orientation'] = Dropdown( description = 'orientation:', value = orientation, options = ['h','v'])
+        self.margins['legend_orientation'].observe(lambda v:self.UpdateLayout( {'legend.orientation':v['new']} ), names='value')
+        self.margins['legend_xpos'] = FloatSlider( description = 'x pos:', value = xpos, min=-0.2, max=1.2 )
+        self.margins['legend_xpos'].observe(lambda v:self.UpdateLayout( {'legend.x':v['new']} ), names='value')
+        self.margins['legend_ypos'] = FloatSlider( description = 'y pos:', value = ypos, min=-0.2, max=1.2 )
+        self.margins['legend_ypos'].observe(lambda v:self.UpdateLayout( {'legend.y':v['new']} ), names='value')
         
     
     def display(self):
@@ -152,12 +162,18 @@ class GluePlotly():
         
     def getDeltaColor (self, color, alpha_val, step=0, angle=25):
         rgb = colors.to_rgba(color)
-        hsv = colors.rgb_to_hsv((rgb[0],rgb[1],rgb[2]))
-        h = (round((hsv[0]*360+angle*step))%360)/360
-        s = (round((hsv[1]*360+(angle/10)*step))%360)/360
-        v = hsv[2]
-        rgb = colors.hsv_to_rgb((h,s,v))
-        return colors.to_rgba(rgb, alpha=alpha_val)
+        if (step > 0):
+            hsv = colors.rgb_to_hsv((rgb[0],rgb[1],rgb[2]))
+            h = (round((hsv[0]*360+angle*step))%360)/360
+            s = (round((hsv[1]*360+(angle/10)*step))%360)/360
+            v = hsv[2]
+            rgb = colors.hsv_to_rgb((h,s,v))
+        color = list(colors.to_rgba(rgb, alpha=alpha_val))
+        for i in range(3):
+            if color[i] >= 1.0:
+                color[i] = color[i]-0.000001
+        color = tuple(color)
+        return color
             
 
     def on_selection(self, callback):#append=False                                                                                                                                                      

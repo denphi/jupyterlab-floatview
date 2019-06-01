@@ -1,7 +1,7 @@
 from .glueplotly import GluePlotly
 from plotly.graph_objs import FigureWidget
 import numpy as np
-from ipywidgets import IntText, Dropdown, FloatText
+from ipywidgets import IntText, Dropdown, FloatText, BoundedIntText
 
 class GlueImagePlotly (GluePlotly):
     def __init__(self, data, dimensions, **kwargs):
@@ -11,16 +11,18 @@ class GlueImagePlotly (GluePlotly):
         self.max_color = max(self.data[z_id].flatten())
         self.min_color = min(self.data[z_id].flatten())
         color_options = ['Greys','YlGnBu','Greens','YlOrRd','Bluered','RdBu','Reds','Blues','Picnic','Rainbow','Portland','Jet','Hot','Blackbody','Earth','Electric','Viridis','Cividis']
-        self.options['line_width'] = IntText(description = 'Lines width:', value = 1)
+        self.options['line_width'] = BoundedIntText(description = 'Lines width:', value = 1, min=0, max=10)
         self.options['line_width'].observe(lambda v:self.UpdateTraces({'line.width':v['new']}), names='value')        
-        self.options['marker_size'] = IntText(description = 'Markers size:', value = 3)
-        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')                
+        self.options['marker_size'] = BoundedIntText(description = 'Markers size:', value = 3, min=0, max=15)
+        self.options['marker_size'].observe(lambda v:self.UpdateTraces({'marker.size':v['new']}), names='value')        
         self.options['color_range_min'] = FloatText(description = 'Color min:', value = self.min_color)
         self.options['color_range_min'].observe(lambda v:self.UpdateTraces({'zmin':v['new']}), names='value')                
         self.options['color_range_max'] = FloatText(description = 'Color max:', value = self.max_color)
         self.options['color_range_max'].observe(lambda v:self.UpdateTraces({'zmax':v['new']}), names='value')                
         self.options['color_scale'] = Dropdown(description = 'Color scale:', value = 'Greys', options=color_options)
         self.options['color_scale'].observe(lambda v:self.UpdateTraces({'colorscale':v['new']}), names='value') 
+        self.DefaultLegend('v', 1.02, 1.0);
+        
         self.updateRender()
         
     def createFigureWidget(self):
@@ -61,31 +63,50 @@ class GlueImagePlotly (GluePlotly):
             traces.append(trace)
 
         for sset in self.data.subsets:     
-            color = sset.style.color
-            color = 'rgba'+str(self.getDeltaColor(color, 0.6))             
-            trace = {
-                'type': "scattergl", 'mode': "markers", 'name': sset.label + "_" + y_id,
-                'marker': dict({
-                    'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
-                    'line' : { 'width' : self.options['line_width'].value, 'color' : color}      
-                }),
-                'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
-                'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
-                'x': sset[x_id].flatten(),
-                'y': sset[y_id].flatten(),
-            }
-            traces.append(trace)  
+            if hasattr(sset,"disabled") == False or sset.disabled == False:            
+                color = sset.style.color
+                color = 'rgba'+str(self.getDeltaColor(color, 0.6))             
+                trace = {
+                    'type': "scattergl", 'mode': "markers", 'name': sset.label + "_" + y_id,
+                    'marker': dict({
+                        'symbol':'circle', 'size': self.options['marker_size'].value, 'color': color,
+                        'line' : { 'width' : self.options['line_width'].value, 'color' : color}      
+                    }),
+                    'selected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},
+                    'unselected':{'marker':{'color':color, 'size': self.options['marker_size'].value}},                
+                    'x': sset[x_id].flatten(),
+                    'y': sset[y_id].flatten(),
+                }
+                traces.append(trace)  
 
         layout = {
             'title' : self.options['title'].value,
-            'margin' : {'l':50,'r':0,'b':50,'t':30 },            
+            'margin' : {
+                'l':self.margins['left'].value,
+                'r':self.margins['right'].value,
+                'b':self.margins['bottom'].value,
+                't':self.margins['top'].value 
+            },     
             'xaxis': { 'autorange' : True, 'zeroline': True, 
                 'title' : self.options['xaxis'].value, 
+                'linecolor' : self.data.get_component(x_id).color,
+                'tickcolor' : self.data.get_component(x_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },
             'yaxis': { 'autorange':True, 'zeroline': True, 
                 'title' : self.options['yaxis'].value, 
+                'linecolor' : self.data.get_component(y_id).color,
+                'tickcolor' : self.data.get_component(y_id).color,
+                'ticklen' : 4,
+                'linewidth' : 4,                
             },
-            'showlegend': True,
+            'showlegend': self.margins['showlegend'].value,
+            'legend' : {
+                'orientation' : self.margins['legend_orientation'].value,
+                'x' : self.margins['legend_xpos'].value,
+                'y' : self.margins['legend_ypos'].value
+            },            
         }        
         return FigureWidget({
                 'data': traces,
