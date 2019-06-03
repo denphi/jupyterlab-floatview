@@ -104,26 +104,26 @@ class GlueCorrelationsPlotly (GluePlotly):
                 }
                 traces.append(trace)
 
-            for i in range (len(self.dimensions)):
-                for j in range (len(self.dimensions)):
-                    currentValue = mat[i][j]
-                    if abs(currentValue) > 0.6 : 
-                        textColor = 'white';
-                    else:
-                        textColor = 'black';
-                        
-                        result = {
-                            'xref': 'x1',
-                            'yref': 'y1',
-                            'x': j,
-                            'y': i,
-                            'text': round(currentValue,2),
-                            'showarrow': False,
-                            'font': {
-                                'color': textColor
+                for i in range (len(self.dimensions)):
+                    for j in range (len(self.dimensions)):
+                        currentValue = mat[i][j]
+                        if abs(currentValue) > 0.6 : 
+                            textColor = 'white';
+                        else:
+                            textColor = 'black';
+                            
+                            result = {
+                                'xref': 'x1',
+                                'yref': 'y1',
+                                'x': j,
+                                'y': i,
+                                'text': round(currentValue,2),
+                                'showarrow': False,
+                                'font': {
+                                    'color': textColor
+                                }
                             }
-                        }
-                    layout['annotations'].append(result);
+                        layout['annotations'].append(result);
             
             
         return FigureWidget({

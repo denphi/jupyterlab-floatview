@@ -216,6 +216,26 @@ class GlueManager:
                         sset_changed.append(sset)
         return sset_changed
 
+    def changeSubsetColorFromSelection(self, labels, values):
+        sset_changed = []
+        for sset in self.data.subsets:
+            for i, label in enumerate(labels):
+                if sset.label == label:
+                    if sset.style.color != values[i]:
+                        sset.style.color = values[i]
+                        sset_changed.append(sset)
+        return sset_changed    
+
+    def changeComponentColorFromSelection(self, labels, values):
+        sset_changed = []
+        for i, label in enumerate(labels):
+            component = self.data.get_component(label)
+            if component.color != values[i]:
+                component.color = values[i]
+                return True
+        return False   
+
+        
 class GlueManagerWidget(widgets.Tab):
     gluemanager = None
     subsets = None
@@ -243,6 +263,7 @@ class GlueManagerWidget(widgets.Tab):
         self.history = self.createHistoryPanel()
         self.options = self.createOptions()
         self.modal = modal
+        self.disable_color_update = False
         self.debug = self.gluemanager.debug        
         self.children = [
             widgets.VBox([self.options, self.plots]), 
@@ -261,15 +282,18 @@ class GlueManagerWidget(widgets.Tab):
 
     def setColorSet(self, dimensions='12', type='qual', dataset='Paired'):         
         if (self.gluemanager.setColorSet(dimensions, type, dataset)):
-                       
+            self.disable_color_update = True
             for cont in self.dimensions.children:
-                vc1 = cont.children[1]
-                vc2 = cont.children[0]                
+                vc1 = cont.children[2]
+                vc2 = cont.children[1]
+                vc3 = cont.children[0]
                 color = self.gluemanager.data.get_component(vc2.description).color
                 color = re.match(GlueManagerWidget.r, color)
                 color = (int(color[1]),int(color[2]),int(color[3]))
                 color = '#%02x%02x%02x' % color
                 vc2.style.button_color = color
+                vc3.value = color
+            self.disable_color_update = False
             self.gluemanager.updateTraces()
     
     def listColorSets(self):
@@ -382,7 +406,15 @@ class GlueManagerWidget(widgets.Tab):
                     layout = widgets.Layout(min_width='min-content', max_width='min-content')
                 )
                 vc2.on_click(lambda event,v=vc1 : setattr(v,'value', not v.value))
-                vv = widgets.HBox([vc2,vc1], layout=widgets.Layout(width='auto'))
+                vc3 = widgets.ColorPicker(
+                    description = "",
+                    concise = True, 
+                    value = color,
+                    layout = widgets.Layout(width='40px', min_width='')
+                )
+                vc3.observe(lambda change, this=self, value=kt, vc=[vc2]: this.changeComponentColorFromSelection(value,change['new'],vc), "value")
+
+                vv = widgets.HBox([vc3,vc2,vc1], layout=widgets.Layout(width='auto'))
                 v.append(vv)
 
         self.dimensions = widgets.HBox(v, layout=widgets.Layout(display='flex', flex_flow='wrap'))
@@ -433,9 +465,9 @@ class GlueManagerWidget(widgets.Tab):
     def createNewView(self,e,dd, tb, tx, ss):
         list_comp = []
         for cont in tb.children:
-            if (len(cont.children) == 2):
-                vc1 = cont.children[1]
-                vc2 = cont.children[0]
+            if (len(cont.children) == 3):
+                vc1 = cont.children[2]
+                vc2 = cont.children[1]
                 if vc1.value == True:
                     list_comp.append(vc2.description) 
         gp = self.gluemanager.newView(dd.value, list_comp, tx.value, only_subsets=ss.value)
@@ -466,8 +498,28 @@ class GlueManagerWidget(widgets.Tab):
             self.updateSubsets()
         if len(ssets) > 0:
             self.gluemanager.updateTraces()
-        
             
+    def changeSubsetColorFromSelection(self, label, color, ui_list=None):
+        ssets = self.gluemanager.changeSubsetColorFromSelection([label], [color])
+        if ui_list is not None:
+            for sset in ssets:
+                if sset.label == label:
+                    for ui in ui_list:
+                        ui.style.button_color=color
+        elif len(ssets) > 0:
+            self.updateSubsets()
+            
+        if len(ssets) > 0:
+            self.gluemanager.updateTraces()
+
+    def changeComponentColorFromSelection(self, label, color, ui_list=[]):
+        if self.disable_color_update == False:
+            if self.gluemanager.changeComponentColorFromSelection([label], [color]):
+                for ui in ui_list:
+                    ui.style.button_color=color
+                    self.gluemanager.updateTraces()
+
+                
     def updateSubsets(self):
         v = []
         for sset in self.gluemanager.data.subsets:
@@ -499,7 +551,14 @@ class GlueManagerWidget(widgets.Tab):
                 value=True
             )
             vc1.on_click(lambda event, this=self, value=kt, vc=vc1: this.disableComponentFromSelection(value, vc) )
-            vv = widgets.HBox([vc1,vc2,vc3], layout=widgets.Layout(width='auto'))
+            vc4 = widgets.ColorPicker(
+                description = "",
+                concise = True, 
+                value = sset.style.color,
+                layout = widgets.Layout(width='40px', min_width='')
+            )
+            vc4.observe(lambda change, this=self, value=kt, vc=[vc1,vc2,vc3]: this.changeSubsetColorFromSelection(value,change['new'],vc), "value")
+            vv = widgets.HBox([vc1,vc2,vc3,vc4], layout=widgets.Layout(width='auto'))
             v.append(vv)
         self.subsetsui.children = v
 
