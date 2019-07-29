@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import {
-  JupyterLab, JupyterLabPlugin
+  JupyterLab, JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import {
@@ -11,13 +11,11 @@ import {
 
 import {
   IJupyterWidgetRegistry
- } from '@jupyter-widgets/base';
+} from '@jupyter-widgets/base';
 
-// TODO: import from @jupyter-widgets/jupyterlab-manager once Output is
-// exported by the main module.
 import {
-   OutputView
-} from '@jupyter-widgets/jupyterlab-manager/lib/output';
+  output
+} from '@jupyter-widgets/jupyterlab-manager';
 
 import {
     Message
@@ -40,7 +38,7 @@ import '../css/floatview.css';
 
 const EXTENSION_ID = '@jupyter-widgets/jupyterlab-floatview';
 
-const floatviewPlugin: JupyterLabPlugin<void> = {
+const floatviewPlugin: JupyterFrontEndPlugin<void> = {
   id: EXTENSION_ID,
   requires: [IJupyterWidgetRegistry],
   activate: activateWidgetExtension,
@@ -73,7 +71,7 @@ class FloatViewOutputArea extends OutputArea{
  * Activate the widget extension.
  */
 function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegistry): void {
-    let FloatviewView = class extends OutputView {
+    let FloatviewView = class extends output.OutputView {
       model: FloatviewModel;
 
       render() {
@@ -96,11 +94,11 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
           if (Object.keys(this.model.views).length > 1) {
             w.node.style.display = 'none';
             let key = Object.keys(this.model.views)[0];
-            this.model.views[key].then((v: OutputView) => {
+            this.model.views[key].then((v: output.OutputView) => {
               v._outputView.activate();
             });
           } else {
-            app.shell.addToMainArea(w, { mode: this.model.get('mode') });
+            app.shell.add(w, 'main', { mode: this.model.get('mode') });
           }
         }
       }
