@@ -1,6 +1,6 @@
 from .glueplotly import GluePlotly
-from plotly.graph_objs import FigureWidget
-import plotly.graph_objs as go
+from plotly.graph_objects import FigureWidget
+import plotly.graph_objects as go
 import numpy as np
 from ipywidgets import IntText, Dropdown, FloatSlider, Label, BoundedIntText
 import colorlover as cl

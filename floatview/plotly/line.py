@@ -1,5 +1,5 @@
 from .glueplotly import GluePlotly
-from plotly.graph_objs import FigureWidget
+from plotly.graph_objects import FigureWidget
 from ipywidgets import Dropdown, IntText, BoundedIntText
 from IPython.display import clear_output
 

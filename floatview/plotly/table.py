@@ -1,7 +1,7 @@
 from .glueplotly import GluePlotly
-from plotly.graph_objs import FigureWidget
+from plotly.graph_objects import FigureWidget
 from plotly import tools
-import plotly.graph_objs as go
+import plotly.graph_objects as go
 import numpy as np
 from copy import deepcopy
 
