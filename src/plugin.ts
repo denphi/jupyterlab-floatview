@@ -49,7 +49,7 @@ export default floatviewPlugin;
 
 
 class FloatViewOutputArea extends OutputArea{
-  container: OutputView;
+  container: output.OutputView;
   processMessage(msg: Message) {
     switch (msg.type) {
     case 'close-request':
@@ -61,7 +61,7 @@ class FloatViewOutputArea extends OutputArea{
     super.processMessage(msg);
 
   }  
-  setContainer( container : OutputView ){
+  setContainer( container : output.OutputView ){
       this.container = container      
   }
   
