@@ -1,5 +1,5 @@
 from .glueplotly import GluePlotly
-from plotly.graph_objs import FigureWidget
+from plotly.graph_objects import FigureWidget
 import numpy as np
 from ipywidgets import IntText, BoundedIntText
 

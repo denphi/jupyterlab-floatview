@@ -23,15 +23,27 @@ A floatview output widget for JupyterLab and a data explorer for glue/iplotly
 
 ## Installation
 
-If you use jupyterlab:
+If you use jupyterlab >= 1.0:
 
 ```bash
 pip install floatview
+jupyter labextension install @jupyter-widgets/jupyterlab-manager@1.0.1
+jupyter labextension install jupyterlab-datawidgets@6.2.0
+jupyter labextension install jupyterlab-plotly@1.0.0
+jupyter labextension install plotlywidget@1.0.0
+jupyter labextension install jupyterlab-floatview@0.2.0
+```
+
+older versions:
+
+```bash
+pip install floatview==0.1.18
 jupyter labextension install @jupyterlab/plotly-extension@0.18.2
 jupyter labextension install plotlywidget@0.9.1
 jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.38.1
 jupyter labextension install jupyterlab-floatview@0.1.11
 ```
+
 
 ## Usage
 

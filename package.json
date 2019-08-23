@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-floatview",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "A floatview output widget for JupyterLab",
   "keywords": [
     "jupyter",
@@ -39,10 +39,11 @@
     "watch:lib": "tsc"
   },
   "dependencies": {
-    "@jupyter-widgets/base": "^1.2.4",
-    "@jupyter-widgets/jupyterlab-manager": "0.38.1",
-    "@jupyterlab/plotly-extension": "0.18.2",
-    "plotlywidget": "0.9.1"
+    "@jupyter-widgets/base": "^2.0.1",
+    "@jupyter-widgets/jupyterlab-manager": "^1.0.0",
+    "@jupyterlab/application": "^1.0.0",
+    "jupyterlab-plotly": "^1.0.0",
+    "plotlywidget": "^1.0.0"
   },
   "devDependencies": {
     "@phosphor/application": "^1.6.0",
@@ -66,7 +67,7 @@
     "rimraf": "^2.6.2",
     "source-map-loader": "^0.2.1",
     "ts-loader": "^2.3.2",
-    "typescript": "~3.2.2"
+    "typescript": "~3.5.2"
   },
   "jupyterlab": {
     "extension": "lib/plugin"
