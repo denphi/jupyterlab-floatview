@@ -36,7 +36,7 @@ jupyter labextension install jupyterlab-floatview@0.3.0
 If you use jupyterlab 1.X:
 
 ```bash
-pip install floatview
+pip install floatview==0.2.0
 jupyter labextension install @jupyter-widgets/jupyterlab-manager@1.0.1
 jupyter labextension install jupyterlab-datawidgets@6.2.0
 jupyter labextension install jupyterlab-plotly@1.0.0
