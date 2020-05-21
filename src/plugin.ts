@@ -7,7 +7,7 @@ import {
 
 import {
     UUID
-} from '@phosphor/coreutils';
+} from '@lumino/coreutils';
 
 import {
   IJupyterWidgetRegistry
@@ -19,7 +19,7 @@ import {
 
 import {
     Message
-} from '@phosphor/messaging';
+} from '@lumino/messaging';
 
 import {
   FloatviewModel
@@ -60,13 +60,13 @@ class FloatViewOutputArea extends OutputArea{
     }
     super.processMessage(msg);
 
-  }  
-  setContainer( container : output.OutputView ){
-      this.container = container      
   }
-  
+  setContainer( container : output.OutputView ){
+      this.container = container
+  }
+
 }
-            
+
 /**
  * Activate the widget extension.
  */
@@ -81,9 +81,9 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
               rendermime: this.model.widget_manager.rendermime,
               contentFactory: OutputArea.defaultContentFactory,
               model: this.model.outputs
-          });                 
+          });
           this._outputView = w;
-          w.setContainer(this)          
+          w.setContainer(this)
           w.addClass('jupyterlab-floatview');
           w.addClass('jp-LinkedOutputView');
           w.title.label = this.model.get('title');

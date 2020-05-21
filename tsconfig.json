@@ -8,7 +8,8 @@
     "moduleResolution": "node",
     "target": "ES6",
     "outDir": "./lib",
-    "types": ["node"]
+    "types": ["node"],
+    "esModuleInterop": true
   },
   "include": ["src/*"]
 }

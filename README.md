@@ -23,7 +23,17 @@ A floatview output widget for JupyterLab and a data explorer for glue/iplotly
 
 ## Installation
 
-If you use jupyterlab >= 1.0:
+If you use jupyterlab 2.X:
+
+```bash
+pip install floatview
+jupyter labextension install @jupyter-widgets/jupyterlab-manager@2.0.0
+jupyter labextension install jupyterlab-plotly@4.7.1
+jupyter labextension install plotlywidget@4.7.1
+jupyter labextension install jupyterlab-floatview@0.3.0
+```
+
+If you use jupyterlab 1.X:
 
 ```bash
 pip install floatview
@@ -83,8 +93,8 @@ gmw = GlueManagerWidget(data, modal=True, label="Data")
 ```python
 #Histogram (supports 1 component)
 view = gmw.gluemanager.newView(
-    "histogram", 
-    ["PULocationID"], 
+    "histogram",
+    ["PULocationID"],
     "Histogram"
 )
 ```
@@ -93,12 +103,12 @@ view = gmw.gluemanager.newView(
 ```python
 #Scatter (supports 2-n components)
 view = gmw.gluemanager.newView(
-    "scatter", 
-    ["PULocationID", "DOLocationID"], 
+    "scatter",
+    ["PULocationID", "DOLocationID"],
     "Scatter"
 )
 view = gmw.gluemanager.newView(
-    "composed_scatter", 
+    "composed_scatter",
     ["trip_distance", "payment_type", 'passenger_count'],
     "Composed Scatter"
 )
@@ -109,169 +119,168 @@ view = gmw.gluemanager.newView(
 ```python
 #ErrorBar (supports 2-n components)
 view = gmw.gluemanager.newView(
-    "errorbar", 
+    "errorbar",
     ["trip_distance", "total_amount"],
     "Error"
 )
 view = gmw.gluemanager.newView(
-    "composed_errorbar", 
-    ["trip_distance", "payment_type", 'passenger_count'], 
+    "composed_errorbar",
+    ["trip_distance", "payment_type", 'passenger_count'],
     "Composed Error"
 )
 ```
 ![error](error.png)
 
 
-```python 
+```python
 #Polynomial Fitting 2-n degree (supports n components)
 view = gmw.gluemanager.newView(
-    "composed_polyfit_3d", 
-    ["trip_distance", "total_amount"], 
+    "composed_polyfit_3d",
+    ["trip_distance", "total_amount"],
     "Polyfit"
 );
 ```
 ![polyfit](polyfit.png)
 
-```python 
+```python
 #scatter 3D (supports 3 components)
 view = gmw.gluemanager.newView(
-    "scatter3D", 
+    "scatter3D",
     ["trip_distance", "total_amount", "passenger_count"],
     "Scatter3D"
 )
 ```
 ![scatter3d](scatter3d.png)
 
-```python 
+```python
 #Contours 2D (supports 2 components)
 view = gmw.gluemanager.newView(
-    "contour", 
+    "contour",
     ["trip_distance", "total_amount"],
     "Contour"
 );
 ```
 ![contour](contour.png)
 
-```python 
+```python
 #Table (supports n components)
 view = gmw.gluemanager.newView(
-    "table", 
+    "table",
     ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Table"
 );
 ```
 ![table](table.png)
 
-```python 
+```python
 #Parallel coordinatess (supports n components)
 view = gmw.gluemanager.newView(
-    "parallels", 
+    "parallels",
     ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Parallels"
 );
 ```
 ![parallels](parallels.png)
 
-```python 
+```python
 #Parallel categories (supports n components)
 view = gmw.gluemanager.newView(
-    "parallelscat", 
+    "parallelscat",
     ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Parallels Categ"
  );
 ```
 ![parallelscat](parallelscat.png)
 
-```python 
+```python
 #Sankey (supports n components)
 view = gmw.gluemanager.newView(
-    "sankey", 
+    "sankey",
     ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Sankey"
 );
 ```
 ![sankey](sankey.png)
 
-```python 
+```python
 #Sunburst (supports n components)
 view = gmw.gluemanager.newView(
-    "sunburst", 
-    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'], 
+    "sunburst",
+    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Sunburst"
 );
 ```
 ![sunburst](sunburst.png)
 
-```python 
+```python
 #Sankey Tree (supports n components)
 view = gmw.gluemanager.newView(
-    "sankeytree", 
-    ['total_amount', 'payment_type', 'passenger_count', ], 
+    "sankeytree",
+    ['total_amount', 'payment_type', 'passenger_count', ],
     "Sankey Tree"
 );
 ```
 ![sankeytree](sankeytree.png)
 
-```python 
+```python
 #Scatter Matrix (supports n components)
 view = gmw.gluemanager.newView(
-    "scattermatrix", 
+    "scattermatrix",
     ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "scatter Matrix"
 );
 ```
 ![scattermatrix](scattermatrix.png)
 
-```python 
+```python
 #Correlation Matrix (supports n components)
 view = gmw.gluemanager.newView(
-    "corrcoef", 
-    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'], 
+    "corrcoef",
+    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Correlation Matrix"
 );
 ```
 ![corrcoef](corrcoef.png)
 
-```python 
+```python
 #Principal components (supports n components)
 view = gmw.gluemanager.newView(
-    "pca", 
-    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'], 
+    "pca",
+    ['passenger_count', 'trip_distance', 'total_amount', 'payment_type'],
     "Principal components"
 );
 ```
 ![pca](pca.png)
 
 
-```python 
+```python
 #Network (supports 2 components)
 view = gmw.gluemanager.newView(
-    "network", 
-    ['trip_distance', 'total_amount'], 
+    "network",
+    ['trip_distance', 'total_amount'],
     "Network"
 );
 ```
 ![network](network.png)
 
 
-```python 
+```python
 #Image (supports 3 components)
 view = gmw.gluemanager.newView(
-    "image", 
-    ["trip_distance", "total_amount", 'passenger_count'], 
+    "image",
+    ["trip_distance", "total_amount", 'passenger_count'],
     "Image"
 );
 ```
 ![image](image.png)
 
 
-```python 
+```python
 #Lines (supports n components)
 view = gmw.gluemanager.newView(
-    "composed_lines", 
+    "composed_lines",
     ["trip_distance", "payment_type", 'passenger_count'],
     "Lines"
 );
 ```
 ![lines](lines.png)
-
