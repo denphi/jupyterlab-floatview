@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import Output
-from traitlets import Unicode
+from traitlets import Unicode,Bool
 from ._version import EXTENSION_SPEC_VERSION
 
 module_name = "@jupyter-widgets/jupyterlab-floatview"
@@ -25,6 +25,7 @@ class Floatview(Output):
     title = Unicode('Floatview').tag(sync=True)
     mode = Unicode('tab-after').tag(sync=True)
     uid = Unicode('').tag(sync=True)
+    active = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super(Floatview, self).__init__(*args, **kwargs)    

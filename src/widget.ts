@@ -24,8 +24,9 @@ class FloatviewModel extends OutputModel {
       _view_module: FloatviewModel.view_module,
       _view_module_version: FloatviewModel.view_module_version,
       title: 'Floatview',
-	  mode: 'tab-after',
-	  uid: FloatviewModel.view_uid,
+      mode: 'tab-after',
+      active: false,
+      uid: FloatviewModel.view_uid,
     };
   }
 

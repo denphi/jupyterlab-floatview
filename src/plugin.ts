@@ -33,6 +33,9 @@ import {
   OutputArea
 } from '@jupyterlab/outputarea';
 
+import {
+  MainAreaWidget
+} from '@jupyterlab/apputils';
 
 import '../css/floatview.css';
 
@@ -77,18 +80,21 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
       render() {
         if (!this.model.rendered) {
           super.render();
-          let w = new FloatViewOutputArea({
+
+          let content = new FloatViewOutputArea({
               rendermime: this.model.widget_manager.rendermime,
               contentFactory: OutputArea.defaultContentFactory,
               model: this.model.outputs
           });
-          this._outputView = w;
-          w.setContainer(this)
+          let w = new MainAreaWidget({content});
+          this._outputView = content;
+          content.setContainer(this);
           w.addClass('jupyterlab-floatview');
           w.addClass('jp-LinkedOutputView');
           w.title.label = this.model.get('title');
           w.title.closable = true;
           w.id = UUID.uuid4();
+
           this.model.set('uid', String(w.id));
           this.model.save_changes();
           if (Object.keys(this.model.views).length > 1) {
@@ -98,7 +104,12 @@ function activateWidgetExtension(app: JupyterLab, registry: IJupyterWidgetRegist
               v._outputView.activate();
             });
           } else {
-            app.shell.add(w, 'main', { mode: this.model.get('mode') });
+ 	    if (!w.isAttached) {
+              app.shell.add(w, 'main', { mode: this.model.get('mode'), activate:this.model.get('active')});
+	    }
+	    if (this.model.get('active')==true){
+	      app.shell.activateById(w.id);
+	    }
           }
         }
       }

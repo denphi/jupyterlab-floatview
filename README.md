@@ -64,7 +64,7 @@ widget.
 from floatview import Floatview
 from ipywidgets import IntSlider
 
-sc = Floatview(title='Floatview Output', mode='tab-after')
+sc = Floatview(title='Floatview Output', mode='tab-after', active=True)
 sl = IntSlider(description='Some slider')
 with sc:
     display(sl)
