@@ -28,8 +28,8 @@ If you use jupyterlab 2.X:
 ```bash
 pip install floatview
 jupyter labextension install @jupyter-widgets/jupyterlab-manager@2.0.0
-jupyter labextension install jupyterlab-plotly@4.7.1
-jupyter labextension install plotlywidget@4.7.1
+jupyter labextension install jupyterlab-plotly@4.9.0
+jupyter labextension install plotlywidget@4.9.0
 jupyter labextension install jupyterlab-floatview@0.3.1
 ```
 
