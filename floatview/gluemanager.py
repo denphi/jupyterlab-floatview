@@ -162,6 +162,15 @@ class GlueManager:
                     self.parent.updateHistory()
         return gp
 
+    def delView(self, key):
+        if isinstance(self.active_views[key].window, Floatview):
+            GlueManager.removeViewIfDisposed(self,self.active_views[key].window)           
+        del self.active_views[key]
+        del self.views[key]
+        self.parent.container.children = [v.window for k,v in self.active_views.items()]
+        self.parent.updateHistory()
+
+
     def removeViewIfDisposed(self,window):
         if(window.uid == "disposed"):
             key = id(window)
@@ -243,6 +252,7 @@ class GlueManagerWidget(widgets.Tab):
     plots = None
     subsetsui = None
     modal = False
+    
     r = r"rgb\((\d+),\s*(\d+),\s*(\d+)\)"
 
     def __init__(self, gluemanager, modal=False, label=None, display_console=True):
@@ -256,7 +266,7 @@ class GlueManagerWidget(widgets.Tab):
         self.display_console = display_console
         if (label is not None):
             self.gluemanager.data.label=label
-        
+        self.container = widgets.VBox()        
         self.gluemanager.setParent(self)
         self.subsets = self.createSubsetsPanel()
         self.plots = self.createPlotsPanel()
@@ -264,7 +274,7 @@ class GlueManagerWidget(widgets.Tab):
         self.options = self.createOptions()
         self.modal = modal
         self.disable_color_update = False
-        self.debug = self.gluemanager.debug        
+        self.debug = self.gluemanager.debug
         self.children = [
             widgets.VBox([self.options, self.plots]), 
             widgets.VBox([self.subsets])
@@ -278,7 +288,7 @@ class GlueManagerWidget(widgets.Tab):
                     display(self)
             else:
                 display(self)
-                display(self.debug)
+                display(self.container)
 
     def setColorSet(self, dimensions='12', type='qual', dataset='Paired'):         
         if (self.gluemanager.setColorSet(dimensions, type, dataset)):
@@ -472,6 +482,9 @@ class GlueManagerWidget(widgets.Tab):
                     list_comp.append(vc2.description) 
         gp = self.gluemanager.newView(dd.value, list_comp, tx.value, only_subsets=ss.value)
         if self.modal is False:
+            new_children = list(self.container.children)
+            new_children.append(gp.window)
+            self.container.children = new_children
             with self.debug:
                 display(gp.window)
             

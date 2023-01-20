@@ -84,12 +84,13 @@ setup_args = dict(
     ],
     include_package_data = True,
     install_requires = [
-        'ipywidgets>=7.5.0',
+        'ipywidgets>=7.5.0,<8.0.0',
         'plotly>=4.0.0',
         'scikit-learn>=0.19.0',        
         'glueviz>=0.15.2',
         'networkx>=2.2',
-        'colorlover>=0.3.0'
+        'colorlover>=0.3.0',
+        'qgrid>=1.3.0'
     ],
     extras_require = {
         'test': [

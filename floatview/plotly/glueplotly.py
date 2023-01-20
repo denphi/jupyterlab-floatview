@@ -3,7 +3,7 @@ from glue import core as gcore
 from floatview import Floatview
 from plotly.offline import init_notebook_mode
 from matplotlib import colors
-from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox, Accordion, FloatSlider, Label, Checkbox
+from ipywidgets import Output, Tab, ToggleButton, Text, Dropdown, IntText, VBox, HBox, Accordion, FloatSlider, Label, Checkbox, Button
 
 
 class GluePlotly():
@@ -45,6 +45,11 @@ class GluePlotly():
         self.options_check = ToggleButton(value = False, description="Options", icon='cog')
         self.options_check.observe(lambda v:self.showWidget(v["new"]), names='value')
 
+
+
+
+
+
         self.tab = HBox()
         self.tab.children = [self.option_tab, self.output_cont]
         init_notebook_mode(connected=True)        
@@ -55,7 +60,10 @@ class GluePlotly():
                 self.window = Floatview(title = title, mode = mode)  
             else:
                 self.window = Output()
-                display(self.window)
+
+        self.options_close = Button(value = "Close", description="Close", icon='close')
+        self.options_close.on_click(lambda e: self.parent.delView(id(self.window)))
+
         self.DefaultMargins()
         self.displayWindow()
 
@@ -128,13 +136,14 @@ class GluePlotly():
     def displayWindow(self):   
         with self.window:
             clear_output()
-            display(self.options_check) 
+            display(HBox([self.options_check, self.options_close]))
             display(self.tab)
 
 
     def displayOptions(self): 
         with self.options_cont:
             clear_output()
+            
             if len(self.options) > 0:
                 for key, option in self.options.items():
                     display(option)

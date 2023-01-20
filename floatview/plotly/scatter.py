@@ -25,7 +25,7 @@ class GlueScatterPlotly (GluePlotly):
         alpha_val = alpha_max   
         xtickmode = "auto"
         xtickvals = None
-        xticktext = None        
+        xticktext = None    
         if hasattr(self.data[x_id].flatten(), 'codes'):
             x_val = self.data[x_id].flatten().codes.tolist()
             tickvals, tickmask = np.unique(self.data[x_id].flatten().codes, return_index=True)
