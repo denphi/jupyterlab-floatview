@@ -1,15 +1,20 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "noImplicitAny": true,
-    "noEmitOnError": true,
-    "noUnusedLocals": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ES6",
-    "outDir": "./lib",
-    "types": ["node"],
-    "esModuleInterop": true
-  },
-  "include": ["src/*"]
+    "compilerOptions": {
+        "declaration": true,
+        "esModuleInterop": true,
+        "noImplicitAny": true,
+        "noEmitOnError": true,
+        "noUnusedLocals": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "ES6",
+        "skipLibCheck": true,
+        "outDir": "./lib",
+        "types": [
+            "node"
+        ]
+    },
+    "include": [
+        "src/*"
+    ]
 }

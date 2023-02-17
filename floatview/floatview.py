@@ -12,7 +12,7 @@ from ipywidgets import Output
 from traitlets import Unicode,Bool
 from ._version import EXTENSION_SPEC_VERSION
 
-module_name = "@jupyter-widgets/jupyterlab-floatview"
+module_name = "jupyterlab-floatview"
 
 
 class Floatview(Output):
