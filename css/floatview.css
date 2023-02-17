@@ -21,3 +21,7 @@
   background-size: 16px;
   background-image: var(--jp-icon-inverse-close-circle);
 }
+
+.jp-OutputArea-output {
+    overflow-y: hidden;
+}
